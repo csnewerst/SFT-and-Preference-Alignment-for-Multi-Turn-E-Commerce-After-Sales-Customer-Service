@@ -1,0 +1,40 @@
+{
+  "auditor_version": "1.0.0",
+  "content_set_sha256": "58578c61decb75e8c13c876655886a5953e2e4829c74f923c86e7cc355a8a5c6",
+  "dataset_root": "/root/autodl-tmp/Resume/customer-service-posttraining/data/ecommerce/domain_train_v1_3_2_zh/sft",
+  "file_count": 3,
+  "issue_counts": {},
+  "near_duplicate_distance": 3,
+  "near_duplicate_pairs_truncated": false,
+  "passed": true,
+  "require_metadata": true,
+  "row_count": 12000,
+  "scenario_counts": {
+    "damaged_exchange": 967,
+    "duplicate_request": 1350,
+    "identity_required": 1029,
+    "missing_item_refund": 964,
+    "missing_order_id": 1584,
+    "no_reason_expired": 1242,
+    "not_delivered": 934,
+    "order_not_found": 1512,
+    "tool_timeout": 1494,
+    "wrong_item_return": 924
+  },
+  "severity_counts": {},
+  "source_counts": {
+    "csds-emnlp21": 7301,
+    "dch2-dialeval2": 4699
+  },
+  "split_counts": {
+    "train": 10800,
+    "validation": 1200
+  },
+  "text_length_chars": {
+    "max": 1319,
+    "min": 89,
+    "p50": 847,
+    "p90": 1291,
+    "p95": 1299
+  }
+}

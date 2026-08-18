@@ -1,0 +1,57 @@
+{
+  "artifacts": {
+    "cases": {
+      "bytes": 510281,
+      "count": 600,
+      "sha256": "4d0215e92a8c12dc99766a44b559662e698cec1ac70eee6d2f627f96cf708921"
+    },
+    "evaluator_cases": {
+      "bytes": 758063,
+      "count": 600,
+      "sha256": "64f69d90452b164c8c0853d776a6e6bdc40cab6b16c115eb9d8e45d1327d157e"
+    },
+    "private_oracle": {
+      "bytes": 2614930,
+      "count": 600,
+      "sha256": "4e2ae50f53aecfa6391fbf8c2bc555c87bea72c1e55a66ee808c891427301c82"
+    },
+    "source_manifest": {
+      "bytes": 187744,
+      "count": 600,
+      "sha256": "dd9f0f9032b7c312a55453540de906b3654b0e1686bd95e4f4abcee5bb71d101"
+    }
+  },
+  "case_count": 600,
+  "category_counts": {
+    "anti_hallucination": 37,
+    "create": 112,
+    "duplicate": 38,
+    "expired": 38,
+    "identity": 38,
+    "missing_order": 112,
+    "not_delivered": 37,
+    "policy": 75,
+    "status": 75,
+    "timeout": 38
+  },
+  "dataset_id": "ecommerce-formal-test-v2",
+  "evidence_offset": 800,
+  "evidence_split": "test",
+  "oracle_replay_pass_rate": 1.0,
+  "schema_version": "2.0",
+  "sealed_at_utc": "2026-08-09T18:55:47.273048+00:00",
+  "source_counts": {
+    "csds-emnlp21": 431,
+    "dch2-dialeval2": 169
+  },
+  "source_ids": [
+    "csds-emnlp21",
+    "dch2-dialeval2"
+  ],
+  "status": "formal_frozen_test_unopened",
+  "tier_counts": {
+    "challenge": 150,
+    "compositional": 150,
+    "iid": 300
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "case_count": 600,
+  "category_metrics": {
+    "anti_hallucination": {
+      "passed": 20,
+      "task_success_rate": 0.5405405405405406,
+      "total": 37
+    },
+    "create": {
+      "passed": 40,
+      "task_success_rate": 0.35714285714285715,
+      "total": 112
+    },
+    "duplicate": {
+      "passed": 33,
+      "task_success_rate": 0.868421052631579,
+      "total": 38
+    },
+    "expired": {
+      "passed": 12,
+      "task_success_rate": 0.3157894736842105,
+      "total": 38
+    },
+    "identity": {
+      "passed": 2,
+      "task_success_rate": 0.05263157894736842,
+      "total": 38
+    },
+    "missing_order": {
+      "passed": 4,
+      "task_success_rate": 0.03571428571428571,
+      "total": 112
+    },
+    "not_delivered": {
+      "passed": 6,
+      "task_success_rate": 0.16216216216216217,
+      "total": 37
+    },
+    "policy": {
+      "passed": 19,
+      "task_success_rate": 0.25333333333333335,
+      "total": 75
+    },
+    "status": {
+      "passed": 46,
+      "task_success_rate": 0.6133333333333333,
+      "total": 75
+    },
+    "timeout": {
+      "passed": 38,
+      "task_success_rate": 1.0,
+      "total": 38
+    }
+  },
+  "eligible_auto_resolution_count": 524,
+  "error_counts": {
+    "forbidden_tool": 102,
+    "goal_state_not_reached": 35,
+    "hallucinated_state": 64,
+    "incomplete_resolution": 110,
+    "missing_final_answer": 89,
+    "parse_error": 89,
+    "unexpected_tool_outcome": 308,
+    "unsupported_identifier:EC-1001": 4,
+    "unsupported_identifier:EC-1001-001": 13,
+    "unsupported_identifier:EC-1005-001": 2,
+    "unsupported_state:refunded": 12,
+    "unsupported_state:shipped": 33,
+    "wrong_argument": 308,
+    "wrong_tool": 308
+  },
+  "metrics": {
+    "answer_requirements_met": 0.8166666666666667,
+    "arguments_valid": 0.4866666666666667,
+    "eligible_auto_resolution_rate": 0.3435114503816794,
+    "facts_faithful": 0.8933333333333333,
+    "final_answer_present": 0.8516666666666667,
+    "forbidden_tool_absent": 0.83,
+    "observation_outcomes_valid": 0.4866666666666667,
+    "parse_success": 0.8516666666666667,
+    "state_assertions_met": 0.9416666666666667,
+    "task_success_rate": 0.36666666666666664,
+    "tool_selection_valid": 0.4866666666666667,
+    "within_step_limit": 1.0
+  },
+  "trace_count": 600
+}

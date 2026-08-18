@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "ecommerce-1p5b-dpo-v1p4-composition-matched-v1",
+  "status": "completed_task_success_supports_multigranularity_with_policy_tradeoff",
+  "question": "Does multigranularity preference data outperform response-only when source pool and count are matched?",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "sft_parent": "sft-r4-all-full-seed42-v1",
+  "source_dataset": "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2",
+  "variants": {
+    "response_only_matched": {
+      "train_count": 173,
+      "validation_count": 19,
+      "selection": "all response-level rows"
+    },
+    "multigranularity_matched": {
+      "train_count": 173,
+      "validation_count": 19,
+      "selection": "deterministic proportional stratification by preference level"
+    }
+  },
+  "data_selection_seed": 20260809,
+  "training": {
+    "beta": 0.1,
+    "learning_rate": 5e-06,
+    "weight_decay": 0.01,
+    "effective_batch_size": 16,
+    "micro_batch_size": 2,
+    "gradient_accumulation_steps": 8,
+    "max_steps": 20,
+    "warmup_steps": 1,
+    "checkpoint_steps": [5, 10, 20],
+    "seed": 42,
+    "precision": "bfloat16",
+    "reference_policy": "frozen_copy_of_loaded_sft_adapter"
+  },
+  "evaluation": {
+    "development_screen_count": 200,
+    "do_sample": false,
+    "max_new_tokens": 512,
+    "max_tool_rounds": 6,
+    "bootstrap_seed": 20260809,
+    "bootstrap_resamples": 10000,
+    "formal_test_v2": "sealed"
+  },
+  "decision_rule": {
+    "primary": "paired task success delta: multigranularity minus response-only at the same checkpoint",
+    "secondary": ["tool_selection_valid", "arguments_valid", "facts_faithful", "forbidden_tool_absent"],
+    "interpretation": "composition effect only; do not compare this matched subset as a replacement for the 720-pair full v1.4 result"
+  }
+}

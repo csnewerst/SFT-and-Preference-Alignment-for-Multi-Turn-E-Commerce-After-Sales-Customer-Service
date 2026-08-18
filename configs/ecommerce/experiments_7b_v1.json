@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0",
+  "plan_id": "ecommerce-qwen25-7b-calibration-v1",
+  "status": "dpo_step5_frozen_ready_for_formal_test",
+  "model": {
+    "model_id": "Qwen/Qwen2.5-7B-Instruct",
+    "local_path": "models/base/Qwen2.5-7B-Instruct",
+    "precision": "bfloat16",
+    "quantization": "none",
+    "trust_remote_code": false,
+    "aggregate_file_sha256": "4b0ff1363802cb9711c38f3f511bd813c46f174da0e04cc1d142276ada48223a"
+  },
+  "data": {
+    "sft_root": "data/ecommerce/domain_train_v1_3_2_zh",
+    "sft_train_count": 10800,
+    "sft_validation_count": 1200,
+    "dpo_root": "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2",
+    "dpo_train_count": 720,
+    "dpo_validation_count": 80,
+    "development_screen_count": 200,
+    "formal_test_v2_policy": "sealed_unopened_open_once_after_configuration_freeze",
+    "formal_test_v2_manifest_sha256": "76285f06b871fb40f8bcad69986c9ea99c203df60fe23be567e3d7318d0ba74a",
+    "formal_test_v2_count": 600
+  },
+  "sft_calibration": {
+    "method": "lora",
+    "target_modules": "all",
+    "rank_candidates": [8, 16],
+    "alpha_by_rank": {"8": 16, "16": 32},
+    "learning_rate": 1e-05,
+    "max_steps": 100,
+    "warmup_steps": 3,
+    "effective_batch_size": 32,
+    "micro_batch_size": 2,
+    "gradient_accumulation_steps": 16,
+    "seed": 42,
+    "data_seed": 42,
+    "model_max_length": 1024,
+    "distributed": false
+  },
+  "sft_main": {
+    "selection": "full_step200_selected_on_paired_screen_and_blocking_metrics",
+    "selected_rank": 8,
+    "selected_adapter": "experiments/local/7b/sft-r8-all-epoch1-seed42-v1/adapter/checkpoint-200",
+    "selected_step": 200,
+    "initial_epochs": 1.0,
+    "maximum_epochs": 2.0,
+    "extension_rule": "extend only when held-out loss and screen error slices improve without blocking regression",
+    "extension_decision": "do_not_extend_after_step300_and_epoch1_rollout_regression"
+  },
+  "dpo_calibration": {
+    "method": "continue_selected_sft_lora_adapter",
+    "beta_primary": 0.1,
+    "drift_mitigation_order": [
+      "select_earlier_checkpoint",
+      "reduce_learning_rate_to_1e-6",
+      "increase_beta_to_0.2_if_needed"
+    ],
+    "beta_exploratory_only": 0.05,
+    "checkpoint_steps": [5, 10, 20],
+    "learning_rate": 2e-06,
+    "learning_rate_fallback": 1e-06,
+    "effective_batch_size": 16,
+    "reference_policy": "frozen_copy_of_loaded_sft_adapter",
+    "reference_logps_tolerance": 0.0001,
+    "seed": 42,
+    "distributed": false
+  },
+  "selection": {
+    "primary_metric": "paired_task_success_rate_vs_sft",
+    "bootstrap_seed": 20260809,
+    "bootstrap_resamples": 10000,
+    "required_slices": ["iid", "compositional", "challenge", "create", "parameter"],
+    "blocking_regressions": [
+      "facts_faithful",
+      "forbidden_tool_absent",
+      "premature_stop",
+      "unnecessary_three_tool_chain",
+      "known_1p5b_step10_regression_cases"
+    ]
+  },
+  "preflight": {
+    "status": "passed",
+    "batch_size": 2,
+    "sequence_length": 1024,
+    "lora_rank": 8,
+    "trainable_parameters": 20185088,
+    "peak_memory_mib": 38644.64,
+    "gpu": "NVIDIA A800-SXM4-80GB",
+    "torch_version": "2.8.0+cu128",
+    "artifact": "experiments/local/7b/preflight-bf16-lora-r8-seq1024-b2-v1/preflight.json"
+  },
+  "calibration_results": {
+    "screen_count": 200,
+    "initial_task_success": 0.42,
+    "initial_eligible_auto_resolution": 0.4090909090909091,
+    "sft_rank8_task_success": 0.65,
+    "sft_rank8_eligible_auto_resolution": 0.6590909090909091,
+    "sft_rank8_minus_initial": {"estimate": 0.23, "ci95_low": 0.15, "ci95_high": 0.31},
+    "sft_rank16_task_success": 0.605,
+    "sft_rank16_eligible_auto_resolution": 0.625,
+    "sft_rank16_minus_initial": {"estimate": 0.185, "ci95_low": 0.095, "ci95_high": 0.27},
+    "sft_rank16_minus_rank8": {"estimate": -0.045, "ci95_low": -0.11, "ci95_high": 0.02},
+    "selected_rank": 8,
+    "known_risk": "rank8 forbidden_tool_absent 0.78 vs initial 0.835; checkpoint selection must monitor overcalling"
+  },
+  "sft_main_results": {
+    "run_id": "sft-r8-all-epoch1-seed42-v1",
+    "config_commit": "eb36a97",
+    "train_runtime_seconds": 3129.5207,
+    "train_loss": 0.7827712047029529,
+    "final_eval_loss": 0.37807270884513855,
+    "final_perplexity": 1.4594690553276213,
+    "screen_count": 200,
+    "checkpoints": {
+      "step100": {"task_success": 0.605, "eligible_auto_resolution": 0.6193181818181818, "facts_faithful": 0.865, "forbidden_tool_absent": 0.83},
+      "step200": {"task_success": 0.59, "eligible_auto_resolution": 0.6079545454545454, "facts_faithful": 0.965, "forbidden_tool_absent": 0.87},
+      "step300": {"task_success": 0.52, "eligible_auto_resolution": 0.5568181818181818, "facts_faithful": 0.99, "forbidden_tool_absent": 0.865},
+      "epoch1": {"task_success": 0.51, "eligible_auto_resolution": 0.5454545454545454, "facts_faithful": 0.995, "forbidden_tool_absent": 0.885}
+    },
+    "selected_checkpoint": "step200",
+    "selected_minus_initial_task_success": {"estimate": 0.17, "ci95_low": 0.085, "ci95_high": 0.26},
+    "selection_reason": "keeps a significant task-success gain while improving facts and forbidden-tool safety; later checkpoints significantly regress rollout success despite lower validation loss"
+  },
+  "dpo_main_results": {
+    "run_id": "dpo-v1p4-full720-beta0p1-lr2e6-seed42-v1",
+    "config_commit": "95db4ba",
+    "reference_preflight_max_abs_diff": 0.0,
+    "reference_trainable_parameters": 0,
+    "train_runtime_seconds": 238.0181,
+    "train_loss": 0.5230746626853943,
+    "final_eval_loss": 0.45112118124961853,
+    "final_eval_reward_margin": 0.6638446606695652,
+    "final_eval_reward_accuracy": 0.95,
+    "screen_count": 200,
+    "checkpoints": {
+      "step5": {"task_success": 0.61, "eligible_auto_resolution": 0.6306818181818182, "facts_faithful": 0.96, "forbidden_tool_absent": 0.88},
+      "step10": {"task_success": 0.6, "eligible_auto_resolution": 0.625, "facts_faithful": 0.94, "forbidden_tool_absent": 0.89},
+      "step20": {"task_success": 0.6, "eligible_auto_resolution": 0.6306818181818182, "facts_faithful": 0.955, "forbidden_tool_absent": 0.9}
+    },
+    "selected_checkpoint": "step5",
+    "selected_adapter": "experiments/local/7b/dpo-v1p4-full720-beta0p1-lr2e6-seed42-v1/adapter/checkpoint-5",
+    "selected_minus_sft_task_success": {"estimate": 0.02, "ci95_low": -0.015, "ci95_high": 0.055},
+    "selection_reason": "highest task success with no blocking safety regression and the shortest preference update; improvement is directional but not statistically significant",
+    "fallback_decision": "not_triggered_no_policy_drift"
+  }
+}

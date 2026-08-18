@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.1",
+  "plan_id": "ecommerce-qwen25-1p5b-screen-v1-post-audit",
+  "status": "dpo_v1p4_direction_gate_passed_checkpoint10_selected",
+  "supersedes_plan_id": "ecommerce-qwen25-1p5b-screen-v1",
+  "model": {
+    "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "local_path": "models/base/Qwen2.5-1.5B-Instruct",
+    "revision": "master",
+    "model_safetensors_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+    "precision": "bfloat16",
+    "trust_remote_code": false
+  },
+  "data": {
+    "root": "data/ecommerce/domain_train_v1_3_2_zh",
+    "sft_train_count": 10800,
+    "sft_validation_count": 1200,
+    "dpo_train_count": 4436,
+    "dpo_validation_count": 564,
+    "prefreeze_root": "data/ecommerce/rollout_prefreeze_v1_1_zh",
+    "screen_count": 200,
+    "sft_development_gate_count": 600,
+    "sft_development_gate_status": "opened_and_consumed_not_formal_test",
+    "formal_test_v2": {
+      "status": "not_built",
+      "required_case_disjointness": [
+        "training_data",
+        "screen_200",
+        "sft_development_gate_600"
+      ],
+      "open_policy": "open_once_after_7b_initial_sft_and_dpo_configuration_freeze"
+    },
+    "split_seed": 20260809
+  },
+  "evaluation": {
+    "do_sample": false,
+    "temperature": 0.0,
+    "max_new_tokens": 512,
+    "max_tool_rounds": 6,
+    "bootstrap_seed": 20260809,
+    "bootstrap_resamples": 10000
+  },
+  "sft": {
+    "method": "lora",
+    "precision": "bfloat16",
+    "learning_rate": 2e-05,
+    "lr_scheduler_type": "cosine",
+    "warmup_steps": 10,
+    "weight_decay": 0.01,
+    "num_train_epochs": 1.0,
+    "effective_batch_size": 32,
+    "gradient_checkpointing": true,
+    "lora_dropout": 0.05,
+    "rank_candidates": [4, 16, 64],
+    "alpha_by_rank": {"4": 8, "16": 32, "64": 128},
+    "target_module_candidates": ["all", "q_proj,v_proj"],
+    "primary_seed": 42,
+    "confirmation_seed": 20260809,
+    "model_max_length": 1024,
+    "model_max_length_selection": "measured max 851 tokens across 12000 rows; zero rows exceed 1024"
+  },
+  "dpo": {
+    "method": "continue_sft_lora_adapter",
+    "precision": "bfloat16",
+    "learning_rate": 5e-06,
+    "lr_scheduler_type": "cosine",
+    "warmup_schedule": {
+      "type": "ceil_ratio_to_steps",
+      "ratio": 0.03,
+      "steps_by_training_budget": {
+        "99": 3,
+        "278": 9
+      }
+    },
+    "weight_decay": 0.01,
+    "training_budget": {
+      "type": "max_steps",
+      "response_only_matched": 99,
+      "multigranularity_matched": 99,
+      "multigranularity_full": 278,
+      "num_train_epochs": "ignored_when_max_steps_is_positive"
+    },
+    "effective_batch_size": 16,
+    "gradient_checkpointing": true,
+    "beta_candidates": [0.05, 0.1, 0.3],
+    "composition_runs": [
+      "response_only_matched",
+      "multigranularity_matched",
+      "multigranularity_full"
+    ],
+    "primary_seed": 42,
+    "confirmation_seed": 20260809,
+    "max_source_length": 1024,
+    "max_target_length": 128,
+    "reference_policy": "frozen_copy_of_loaded_sft_adapter",
+    "reference_logps_preflight": {
+      "enabled": true,
+      "tolerance": 0.0001
+    },
+    "length_selection": "measured prompt max 796 and chosen/rejected max 53 across 5000 pairs"
+  },
+  "distributed": {
+    "main_runs": "single_gpu",
+    "parallelism": "one independent run per GPU",
+    "deepspeed": false,
+    "optional_scaling_smoke": "single GPU vs two-GPU ZeRO-2 on identical fixed steps"
+  },
+  "selection": {
+    "primary_metric": "task_success_rate",
+    "required_slices": [
+      "iid",
+      "compositional",
+      "challenge",
+      "multi_step_create",
+      "parameter_correctness"
+    ],
+    "block_on_regressions": [
+      "policy_compliance",
+      "observation_grounding",
+      "unnecessary_tool_call_rate",
+      "premature_stop_rate"
+    ]
+  }
+}

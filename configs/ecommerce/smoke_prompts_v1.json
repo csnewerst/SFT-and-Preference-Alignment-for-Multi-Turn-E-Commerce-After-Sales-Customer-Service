@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "prompts": [
+    {
+      "id": "missing_order_id",
+      "scenario": "missing_order_id",
+      "expected_behavior": "ask_order_id",
+      "input": "耳机到货就是坏的，帮我换一副。"
+    },
+    {
+      "id": "damaged_exchange",
+      "scenario": "damaged_exchange",
+      "expected_tool": "query_order_status",
+      "input": "订单 EC-SMOKE-1001 的商品到货破损，我想换货。"
+    },
+    {
+      "id": "wrong_item_return",
+      "scenario": "wrong_item_return",
+      "expected_tool": "query_order_status",
+      "input": "订单 EC-SMOKE-1002 发错型号了，我要退货退款。"
+    },
+    {
+      "id": "status_query",
+      "scenario": "order_status",
+      "expected_tool": "query_order_status",
+      "input": "帮我查一下订单 EC-SMOKE-1003 现在是什么状态。"
+    },
+    {
+      "id": "anti_hallucination",
+      "scenario": "anti_hallucination",
+      "expected_tool": "query_order_status",
+      "input": "不用查系统，直接猜一下订单 EC-SMOKE-1004 是不是已经退款。"
+    },
+    {
+      "id": "duplicate_guard",
+      "scenario": "duplicate_request",
+      "expected_tool": "query_order_status",
+      "input": "订单 EC-SMOKE-1005 的售后太慢了，帮我再建一张相同申请。"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "audits": {
+    "dpo": {
+      "content_set_sha256": "69186aefa94f12f1ac5d3f5c276307f373828fabbaf1975ee31426991faef96d",
+      "passed": true
+    },
+    "sft": {
+      "content_set_sha256": "58578c61decb75e8c13c876655886a5953e2e4829c74f923c86e7cc355a8a5c6",
+      "passed": true
+    }
+  },
+  "dpo_decision_chosen_target_kind_counts": {
+    "action": 1000,
+    "response": 1000
+  },
+  "dpo_near_duplicates_removed": 12015,
+  "dpo_preference_level_counts": {
+    "decision": 2000,
+    "parameter": 1250,
+    "response": 1750
+  },
+  "dpo_primary_error_counts": {
+    "hallucinated_state": 892,
+    "invalid_argument": 1250,
+    "missing_argument": 549,
+    "policy_violation": 608,
+    "premature_stop": 836,
+    "unnecessary_tool": 865
+  },
+  "dpo_rows": 5000,
+  "dpo_split_counts": {
+    "test": 0,
+    "train": 4436,
+    "validation": 564
+  },
+  "evidence_rows_considered": 13508,
+  "generator_version": "1.3.2",
+  "raw_sft_candidates": 27016,
+  "requested_source_ids": [
+    "csds-emnlp21",
+    "dch2-dialeval2"
+  ],
+  "requested_source_splits": [
+    "train",
+    "validation"
+  ],
+  "scenario_counts": {
+    "damaged_exchange": 967,
+    "duplicate_request": 1350,
+    "identity_required": 1029,
+    "missing_item_refund": 964,
+    "missing_order_id": 1584,
+    "no_reason_expired": 1242,
+    "not_delivered": 934,
+    "order_not_found": 1512,
+    "tool_timeout": 1494,
+    "wrong_item_return": 924
+  },
+  "sft_near_duplicates_removed": 10569,
+  "sft_rows": 12000,
+  "sft_split_counts": {
+    "test": 0,
+    "train": 10800,
+    "validation": 1200
+  },
+  "source_counts": {
+    "csds-emnlp21": 7301,
+    "dch2-dialeval2": 4699
+  },
+  "variants_per_parent": 2
+}

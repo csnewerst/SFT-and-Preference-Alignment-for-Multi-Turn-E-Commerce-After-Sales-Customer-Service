@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+!.env.example
+.codex/
+auth.json
+credentials*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Base models and local generated artifacts
+models/
+data/raw/
+data/external/
+data/ecommerce/public_pilot/
+data/ecommerce/authorized/
+cache/
+outputs/
+logs/
+experiments/local/
+/checkpoints/
+/checkpoint-*/
+wandb/
+runs/
+
+# Large model/training files not selected for release
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+optimizer.pt
+scheduler.pt
+trainer_state.json
+
+# Selected release adapters are stored under artifacts/ and tracked with Git LFS.
+
+# Local review artifacts
+*.xlsx
+!artifacts/human_review/*.xlsx
+*.xls
+*.csv
+*.tsv
+*.log

@@ -1,0 +1,70 @@
+{
+  "input_root": "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2",
+  "schema_version": "1.0",
+  "seed": 20260809,
+  "status": "training_ablation_data_not_formal_evaluation",
+  "variants": {
+    "multigranularity_full": {
+      "train": {
+        "count": 720,
+        "level_counts": {
+          "decision": 518,
+          "parameter": 29,
+          "response": 173
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/multigranularity_full/train/records.jsonl",
+        "sha256": "be20e12b4fbb65a591d9f45a3e8c96ccfa2820ddfa8e7fac0d7cc3822a76bc4f"
+      },
+      "validation": {
+        "count": 80,
+        "level_counts": {
+          "decision": 58,
+          "parameter": 3,
+          "response": 19
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/multigranularity_full/validation/records.jsonl",
+        "sha256": "940816b594b875c82e9aabcecae6e3be3be5c7a11a19f168d4958de0b4e61cf7"
+      }
+    },
+    "multigranularity_matched": {
+      "train": {
+        "count": 173,
+        "level_counts": {
+          "decision": 124,
+          "parameter": 7,
+          "response": 42
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/multigranularity_matched/train/records.jsonl",
+        "sha256": "5c20004481a88da94efd8505fc3d592225bb2a1676e951757d13de3f964badbd"
+      },
+      "validation": {
+        "count": 19,
+        "level_counts": {
+          "decision": 14,
+          "parameter": 1,
+          "response": 4
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/multigranularity_matched/validation/records.jsonl",
+        "sha256": "95f14b6211dad26edc9d7dbc2c2d72c2f630e2779fbc47deb0e98e992d5a802f"
+      }
+    },
+    "response_only_matched": {
+      "train": {
+        "count": 173,
+        "level_counts": {
+          "response": 173
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/response_only_matched/train/records.jsonl",
+        "sha256": "4d4a813327b045b456ec7f5ebdafff18302c1a540fc3b18b8a33005e6f86025e"
+      },
+      "validation": {
+        "count": 19,
+        "level_counts": {
+          "response": 19
+        },
+        "path": "data/ecommerce/dpo_v1_4_rollout_quality_composition_matched_v1/response_only_matched/validation/records.jsonl",
+        "sha256": "ee76bafe933bc9483cc3e3b79659a6d2f2a729d6490bde367d5b8e177036c02d"
+      }
+    }
+  }
+}

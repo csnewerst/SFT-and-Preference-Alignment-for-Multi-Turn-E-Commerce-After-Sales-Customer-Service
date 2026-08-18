@@ -1,0 +1,57 @@
+{
+  "policy_version": "2026-08-v1",
+  "return_window_days": 7,
+  "eligible_payment_statuses": [
+    "paid"
+  ],
+  "eligible_fulfillment_statuses": [
+    "shipped",
+    "delivered"
+  ],
+  "rules": {
+    "no_reason": {
+      "allowed_request_types": [
+        "return_refund"
+      ],
+      "requires_delivery": true,
+      "enforce_return_window": true,
+      "evidence_required": false
+    },
+    "damaged": {
+      "allowed_request_types": [
+        "refund_only",
+        "return_refund",
+        "exchange"
+      ],
+      "requires_delivery": true,
+      "enforce_return_window": false,
+      "evidence_required": true
+    },
+    "wrong_item": {
+      "allowed_request_types": [
+        "return_refund",
+        "exchange"
+      ],
+      "requires_delivery": true,
+      "enforce_return_window": false,
+      "evidence_required": true
+    },
+    "missing_item": {
+      "allowed_request_types": [
+        "refund_only"
+      ],
+      "requires_delivery": true,
+      "enforce_return_window": false,
+      "evidence_required": true
+    },
+    "quality_issue": {
+      "allowed_request_types": [
+        "return_refund",
+        "exchange"
+      ],
+      "requires_delivery": true,
+      "enforce_return_window": false,
+      "evidence_required": true
+    }
+  }
+}

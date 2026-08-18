@@ -1,0 +1,732 @@
+# -*- coding: utf-8 -*-
+"""
+@author:XuMing(xuming624@qq.com)
+@description: Train a model from SFT using DPO
+"""
+import json
+import os
+from copy import deepcopy
+from dataclasses import dataclass, field
+from glob import glob
+from pathlib import Path
+from typing import Dict, Optional
+import sys
+
+import torch
+from datasets import load_dataset
+from loguru import logger
+from peft import LoraConfig, PeftModel, TaskType
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    HfArgumentParser,
+    BitsAndBytesConfig,
+)
+from transformers.integrations import is_deepspeed_zero3_enabled
+from trl import DPOTrainer, DPOConfig
+from trl.trainer.utils import selective_log_softmax
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from training.tool_utils import get_tool_utils, FunctionCall, load_local_json_datasets
+from training.template import get_conv_template
+
+os.environ["TOKENIZERS_PARALLELISM"] = "FALSE"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+
+@dataclass
+class ScriptArguments:
+    """
+    The name of the Casual LM model we wish to fine with DPO
+    """
+    # Model arguments
+    model_name_or_path: Optional[str] = field(
+        default=None, metadata={"help": "The model checkpoint for weights initialization."}
+    )
+    tokenizer_name_or_path: Optional[str] = field(
+        default=None, metadata={"help": "The tokenizer for weights initialization."}
+    )
+    load_in_8bit: bool = field(default=False, metadata={"help": "Whether to load the model in 8bit mode or not."})
+    load_in_4bit: bool = field(default=False, metadata={"help": "Whether to load the model in 4bit mode or not."})
+    cache_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+    )
+    use_fast_tokenizer: bool = field(
+        default=False,
+        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+    )
+    torch_dtype: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "Override the default `torch.dtype` and load the model under this dtype. If `auto` is passed, the "
+                "dtype will be automatically derived from the model's weights."
+            ),
+            "choices": ["auto", "bfloat16", "float16", "float32"],
+        },
+    )
+    device_map: Optional[str] = field(
+        default="auto",
+        metadata={"help": "Device to map model to. If `auto` is passed, the device will be selected automatically. "},
+    )
+    trust_remote_code: bool = field(
+        default=True,
+        metadata={"help": "Whether to trust remote code when loading a model from a remote checkpoint."},
+    )
+    # Dataset arguments
+    dataset_name: Optional[str] = field(
+        default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
+    )
+    dataset_config_name: Optional[str] = field(
+        default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
+    )
+    train_file_dir: Optional[str] = field(default=None, metadata={"help": "The input jsonl data file folder."})
+    validation_file_dir: Optional[str] = field(default=None, metadata={"help": "The evaluation jsonl file folder."}, )
+    template_name: Optional[str] = field(
+        default=None,
+        metadata={"help": "The prompt template name. If not set, use tokenizer's built-in chat_template."}
+    )
+    tool_format: Optional[str] = field(
+        default=None,
+        metadata={"help": "Tool format to use for agent training. Options: default, glm4, llama3, mistral, qwen."}
+    )
+    per_device_train_batch_size: Optional[int] = field(default=4, metadata={"help": "Train batch size per device"})
+    per_device_eval_batch_size: Optional[int] = field(default=1, metadata={"help": "Eval batch size per device"})
+    max_source_length: Optional[int] = field(default=2048, metadata={"help": "Max length of prompt input text"})
+    max_target_length: Optional[int] = field(default=512, metadata={"help": "Max length of output text"})
+    min_target_length: Optional[int] = field(default=4, metadata={"help": "Min length of output text"})
+    max_train_samples: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": (
+                "For debugging purposes or quicker training, truncate the number of training examples to this "
+                "value if set."
+            )
+        },
+    )
+    max_eval_samples: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": (
+                "For debugging purposes or quicker training, truncate the number of evaluation examples to this "
+                "value if set."
+            )
+        },
+    )
+    overwrite_cache: bool = field(
+        default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
+    )
+    validation_split_percentage: Optional[int] = field(
+        default=1,
+        metadata={
+            "help": "The percentage of the train set used as validation set in case there's no validation split"
+        },
+    )
+    preprocessing_num_workers: Optional[int] = field(
+        default=4, metadata={"help": "The number of processes to use for the preprocessing."},
+    )
+    # Training arguments
+    use_peft: bool = field(default=True, metadata={"help": "Whether to use peft"})
+    qlora: bool = field(default=False, metadata={"help": "Whether to use qlora"})
+    target_modules: Optional[str] = field(default=None)
+    lora_rank: Optional[int] = field(default=8)
+    lora_dropout: Optional[float] = field(default=0.05)
+    lora_alpha: Optional[float] = field(default=16.0)
+    peft_path: Optional[str] = field(default=None)
+    beta: Optional[float] = field(default=0.1, metadata={"help": "DPO preference strength"})
+    do_train: bool = field(default=False, metadata={"help": "Whether to run training."})
+    do_eval: bool = field(default=False, metadata={"help": "Whether to run eval on the validation set."})
+    learning_rate: Optional[float] = field(default=5e-4, metadata={"help": "Learning rate"})
+    lr_scheduler_type: Optional[str] = field(default="cosine", metadata={"help": "The lr scheduler type"})
+    warmup_steps: Optional[int] = field(default=100, metadata={"help": "The number of warmup steps"})
+    weight_decay: Optional[float] = field(default=0.05, metadata={"help": "The weight decay"})
+    optim: Optional[str] = field(default="adamw_torch", metadata={"help": "The optimizer type"})
+    fp16: Optional[bool] = field(default=True, metadata={"help": "Whether to use fp16"})
+    bf16: Optional[bool] = field(default=False, metadata={"help": "Whether to use bf16"})
+    gradient_checkpointing: Optional[bool] = field(
+        default=True, metadata={"help": "Whether to use gradient checkpointing"}
+    )
+    gradient_accumulation_steps: Optional[int] = field(
+        default=4, metadata={"help": "The number of gradient accumulation steps"}
+    )
+    save_steps: Optional[int] = field(default=50, metadata={"help": "X steps to save the model"})
+    eval_steps: Optional[int] = field(default=50, metadata={"help": "X steps to evaluate the model"})
+    logging_steps: Optional[int] = field(default=1, metadata={"help": "X steps to log the model"})
+    output_dir: Optional[str] = field(default="outputs-dpo", metadata={"help": "The output directory"})
+    max_steps: Optional[int] = field(default=200, metadata={"help": "Number of steps to train"})
+    eval_strategy: Optional[str] = field(default="steps", metadata={"help": "Evaluation strategy"})
+    remove_unused_columns: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Remove unused columns from the dataset if `datasets.Dataset` is used"},
+    )
+    report_to: Optional[str] = field(default="tensorboard", metadata={"help": "Report to wandb or tensorboard"})
+    seed: Optional[int] = field(default=42, metadata={"help": "Random seed"})
+    verify_reference_logps: Optional[bool] = field(
+        default=True,
+        metadata={"help": "Verify that policy and frozen reference log-probs match before the first optimizer step"},
+    )
+    reference_logps_tolerance: Optional[float] = field(
+        default=1e-4,
+        metadata={"help": "Maximum absolute policy/reference log-prob difference allowed by the preflight"},
+    )
+
+    def __post_init__(self):
+        if self.model_name_or_path is None:
+            raise ValueError("You must specify a valid model_name_or_path to run training.")
+        if self.peft_path and not self.use_peft:
+            raise ValueError("peft_path requires use_peft=True")
+        if self.beta is None or self.beta <= 0:
+            raise ValueError("beta must be positive")
+        if self.reference_logps_tolerance is None or self.reference_logps_tolerance < 0:
+            raise ValueError("reference_logps_tolerance must be non-negative")
+
+
+def _completion_logps(model, inputs):
+    non_model_keys = {"completion_mask", "ref_chosen_logps", "ref_rejected_logps"}
+    model_kwargs = {key: value for key, value in inputs.items() if key not in non_model_keys}
+    model_kwargs["use_cache"] = False
+    outputs = model(**model_kwargs)
+    shift_labels = inputs["input_ids"][..., 1:]
+    completion_mask = inputs["completion_mask"][..., 1:]
+    per_token_logps = selective_log_softmax(outputs.logits[..., :-1, :], shift_labels)
+    per_token_logps[completion_mask == 0] = 0.0
+    chosen, rejected = per_token_logps.sum(dim=1).chunk(2, dim=0)
+    return chosen, rejected
+
+
+def verify_reference_matches_initial_policy(trainer, output_dir, tolerance):
+    """Fail before training if TRL's frozen reference is not the loaded initial policy."""
+    model = trainer.accelerator.unwrap_model(trainer.model)
+    if not isinstance(model, PeftModel):
+        raise ValueError("reference preflight currently requires a PEFT policy")
+    if "ref" not in model.peft_config:
+        raise ValueError("TRL did not create a frozen ref adapter from the loaded SFT adapter")
+    ref_trainable_parameters = sum(
+        parameter.numel()
+        for name, parameter in model.named_parameters()
+        if ".ref." in name and parameter.requires_grad
+    )
+    if ref_trainable_parameters:
+        raise ValueError(f"reference adapter has {ref_trainable_parameters} trainable parameters")
+
+    sample_count = min(2, len(trainer.train_dataset))
+    if sample_count < 1:
+        raise ValueError("reference preflight requires a non-empty training dataset")
+    batch = trainer.data_collator([trainer.train_dataset[index] for index in range(sample_count)])
+    batch = trainer._prepare_inputs(batch)
+    was_training = trainer.model.training
+    trainer.model.eval()
+    try:
+        with torch.no_grad():
+            policy_chosen, policy_rejected = _completion_logps(trainer.model, batch)
+            reference_chosen, reference_rejected = trainer.compute_ref_log_probs(trainer.model, batch)
+    finally:
+        trainer.model.train(was_training)
+
+    chosen_max_abs_diff = (policy_chosen - reference_chosen).abs().max().item()
+    rejected_max_abs_diff = (policy_rejected - reference_rejected).abs().max().item()
+    max_abs_diff = max(chosen_max_abs_diff, rejected_max_abs_diff)
+    payload = {
+        "status": "passed" if max_abs_diff <= tolerance else "failed",
+        "sample_count": sample_count,
+        "policy_adapter": "default",
+        "reference_adapter": "ref",
+        "reference_trainable_parameters": ref_trainable_parameters,
+        "chosen_max_abs_diff": chosen_max_abs_diff,
+        "rejected_max_abs_diff": rejected_max_abs_diff,
+        "max_abs_diff": max_abs_diff,
+        "tolerance": tolerance,
+    }
+    output_path = Path(output_dir) / "reference_preflight.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    logger.info(f"DPO reference preflight: {payload}")
+    if max_abs_diff > tolerance:
+        raise ValueError(
+            f"initial policy/reference log-probs differ by {max_abs_diff}, exceeding tolerance {tolerance}"
+        )
+    return payload
+
+
+def print_trainable_parameters(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    trainable_params = 0
+    all_param = 0
+    for _, param in model.named_parameters():
+        all_param += param.numel()
+        if param.requires_grad:
+            trainable_params += param.numel()
+    logger.info(
+        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
+    )
+
+
+def find_all_linear_names(peft_model, int4=False, int8=False):
+    """Find all linear layer names in the model. reference from qlora paper."""
+    cls = torch.nn.Linear
+    if int4 or int8:
+        import bitsandbytes as bnb
+        if int4:
+            cls = bnb.nn.Linear4bit
+        elif int8:
+            cls = bnb.nn.Linear8bitLt
+    lora_module_names = set()
+    for name, module in peft_model.named_modules():
+        if isinstance(module, cls):
+            # last layer is not add to lora_module_names
+            if 'lm_head' in name:
+                continue
+            if 'output_layer' in name:
+                continue
+            names = name.split('.')
+            lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+    return sorted(lora_module_names)
+
+
+def main():
+    parser = HfArgumentParser(ScriptArguments)
+    args = parser.parse_args_into_dataclasses(return_remaining_strings=True)[0]
+    logger.info(f"Parse args: {args}")
+
+    # Load tokenizer
+    tokenizer_kwargs = {
+        "cache_dir": args.cache_dir,
+        "use_fast": args.use_fast_tokenizer,
+        "trust_remote_code": args.trust_remote_code,
+    }
+    tokenizer_name_or_path = args.tokenizer_name_or_path
+    if not tokenizer_name_or_path:
+        tokenizer_name_or_path = args.model_name_or_path
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path, **tokenizer_kwargs)
+    prompt_template = None
+    if args.template_name:
+        prompt_template = get_conv_template(args.template_name)
+    if tokenizer.eos_token_id is None:
+        if prompt_template:
+            tokenizer.eos_token = prompt_template.stop_str
+        else:
+            tokenizer.eos_token = "</s>"
+        tokenizer.add_special_tokens({"eos_token": tokenizer.eos_token})
+        logger.info(f"Add eos_token: {tokenizer.eos_token}, eos_token_id: {tokenizer.eos_token_id}")
+    if tokenizer.bos_token_id is None:
+        tokenizer.add_special_tokens({"bos_token": tokenizer.eos_token})
+        tokenizer.bos_token_id = tokenizer.eos_token_id
+        logger.info(f"Add bos_token: {tokenizer.bos_token}, bos_token_id: {tokenizer.bos_token_id}")
+    if tokenizer.pad_token_id is None:
+        if tokenizer.unk_token_id is not None:
+            tokenizer.pad_token = tokenizer.unk_token
+        else:
+            tokenizer.pad_token = tokenizer.eos_token
+        logger.info(f"Add pad_token: {tokenizer.pad_token}, pad_token_id: {tokenizer.pad_token_id}")
+    logger.debug(f"Tokenizer: {tokenizer}")
+
+    # Get datasets
+    if args.dataset_name is not None:
+        # Downloading and loading a dataset from the hub.
+        raw_datasets = load_dataset(
+            args.dataset_name,
+            args.dataset_config_name,
+            cache_dir=args.cache_dir,
+        )
+        if "validation" not in raw_datasets.keys():
+            raw_datasets["validation"] = load_dataset(
+                args.dataset_name,
+                args.dataset_config_name,
+                split=f"train[:{args.validation_split_percentage}%]",
+                cache_dir=args.cache_dir,
+            )
+            raw_datasets["train"] = load_dataset(
+                args.dataset_name,
+                args.dataset_config_name,
+                split=f"train[{args.validation_split_percentage}%:]",
+                cache_dir=args.cache_dir,
+            )
+    else:
+        data_files = {}
+        if args.train_file_dir is not None and os.path.exists(args.train_file_dir):
+            train_data_files = glob(f'{args.train_file_dir}/**/*.jsonl', recursive=True)
+            logger.info(f"train files: {', '.join(train_data_files)}")
+            data_files["train"] = train_data_files
+        if args.validation_file_dir is not None and os.path.exists(args.validation_file_dir):
+            eval_data_files = glob(f'{args.validation_file_dir}/**/*.jsonl', recursive=True)
+            logger.info(f"eval files: {', '.join(eval_data_files)}")
+            data_files["validation"] = eval_data_files
+        raw_datasets = load_local_json_datasets(data_files, cache_dir=args.cache_dir)
+        # If no validation data is there, validation_split_percentage will be used to divide the dataset.
+        if "validation" not in raw_datasets.keys():
+            train_dataset = raw_datasets["train"]
+            validation_size = int(len(train_dataset) * args.validation_split_percentage / 100)
+            raw_datasets["validation"] = train_dataset.select(range(validation_size))
+            raw_datasets["train"] = train_dataset.select(range(validation_size, len(train_dataset)))
+    logger.info(f"Raw datasets: {raw_datasets}")
+
+    # Preprocessing the datasets
+    max_source_length = args.max_source_length
+    max_target_length = args.max_target_length
+    full_max_length = max_source_length + max_target_length
+
+    def _format_tool_call_value(value, tool_fmt):
+        """Format a function_call value using tool_utils."""
+        fc_dict = json.loads(value)
+        if "name" in fc_dict and "arguments" in fc_dict:
+            if tool_fmt:
+                tu = get_tool_utils(tool_fmt)
+                return tu.function_formatter(
+                    [FunctionCall(fc_dict["name"], json.dumps(fc_dict["arguments"], ensure_ascii=False))]
+                )
+            else:
+                return f"Action: {fc_dict['name']}\nAction Input: {json.dumps(fc_dict['arguments'], ensure_ascii=False)}"
+        return value
+
+    def _format_observation_value(value, tool_fmt):
+        """Format an observation value for the tool format."""
+        if tool_fmt == "qwen":
+            return f"<tool_response>\n{value}\n</tool_response>"
+        elif tool_fmt == "glm4":
+            return f"<|observation|>\n{value}"
+        elif tool_fmt == "mistral":
+            return f'[TOOL_RESULTS] {{"content": {value}}}[/TOOL_RESULTS]'
+        else:
+            return f"Observation: {value}"
+
+    def _build_prompt_from_conversations(source, tools_json, system_prompt_override, tool_fmt):
+        """Build a prompt string from sharegpt-style conversations with tool call support."""
+        system_prompt = system_prompt_override or ""
+        tools_text = ""
+
+        if tools_json:
+            tools_parsed = json.loads(tools_json) if isinstance(tools_json, str) else tools_json
+            if tools_parsed and tool_fmt:
+                tu = get_tool_utils(tool_fmt)
+                tools_text = tu.tool_formatter(tools_parsed)
+
+        chat_messages = []
+        for sentence in source:
+            role = sentence.get("from", "")
+            value = sentence.get("value", "")
+
+            if role == "system":
+                system_prompt = value
+                continue
+
+            if role in ["human", "user", "observation"]:
+                if role == "observation":
+                    value = _format_observation_value(value, tool_fmt)
+                chat_messages.append({"role": "user", "content": value})
+            elif role in ["gpt", "assistant", "function_call"]:
+                if role == "function_call":
+                    value = _format_tool_call_value(value, tool_fmt)
+                chat_messages.append({"role": "assistant", "content": value})
+
+        if tools_text:
+            system_prompt = system_prompt + ("\n\n" if system_prompt else "") + tools_text
+
+        history_messages = []
+        temp = []
+        for msg in chat_messages:
+            if not temp and msg["role"] == "user":
+                temp.append(msg["content"])
+            elif len(temp) == 1 and msg["role"] == "assistant":
+                temp.append(msg["content"])
+                history_messages.append(temp)
+                temp = []
+            elif msg["role"] == "user" and len(temp) == 1:
+                temp[0] += "\n" + msg["content"]
+            elif msg["role"] == "assistant" and len(temp) == 2:
+                history_messages[-1][1] += "\n" + msg["content"]
+        if len(temp) == 1:
+            history_messages.append([temp[0], ""])
+
+        if prompt_template:
+            return prompt_template.get_prompt(messages=history_messages, system_prompt=system_prompt)
+        else:
+            accumulated = []
+            if system_prompt:
+                accumulated.append({"role": "system", "content": system_prompt})
+            for uq, br in history_messages:
+                accumulated.append({"role": "user", "content": uq})
+                if br:
+                    accumulated.append({"role": "assistant", "content": br})
+            return tokenizer.apply_chat_template(
+                accumulated, tokenize=False, add_generation_prompt=True
+            )
+
+    def return_prompt_and_responses(examples) -> Dict[str, str]:
+        """Load the paired dataset and convert it to the necessary format.
+
+        Data format (ShareGPT):
+            {conversations: [{from, value}, ...], chosen: str|dict, rejected: str|dict, tools?: str}
+
+        The dataset is converted to a dictionary with the following structure:
+        {
+            'prompt': List[str],
+            'chosen': List[str],
+            'rejected': List[str],
+        }
+        """
+        prompts = []
+        chosen_list = []
+        rejected_list = []
+
+        tools_list = examples.get("tools", [None] * len(examples["conversations"]))
+        for i, source in enumerate(examples["conversations"]):
+            tools_json = tools_list[i] if tools_list else None
+
+            chosen_text = examples["chosen"][i]
+            rejected_text = examples["rejected"][i]
+
+            prompt = _build_prompt_from_conversations(
+                source, tools_json, "", args.tool_format
+            )
+            prompts.append(prompt)
+            chosen_list.append(chosen_text)
+            rejected_list.append(rejected_text)
+
+        return {
+            "prompt": prompts,
+            "chosen": chosen_list,
+            "rejected": rejected_list,
+        }
+
+    def within_token_limits(example) -> bool:
+        prompt_length = len(tokenizer.encode(example['prompt'], add_special_tokens=False))
+        chosen_length = len(tokenizer.encode(example['chosen'], add_special_tokens=False))
+        rejected_length = len(tokenizer.encode(example['rejected'], add_special_tokens=False))
+        return (
+            0 < prompt_length <= max_source_length
+            and 0 < chosen_length <= max_target_length
+            and 0 < rejected_length <= max_target_length
+        )
+
+    # Preprocess the dataset
+    train_dataset = None
+    max_train_samples = 0
+    if args.do_train:
+        if "train" not in raw_datasets:
+            raise ValueError("--do_train requires a train dataset")
+        train_dataset = raw_datasets['train']
+        max_train_samples = len(train_dataset)
+        if args.max_train_samples is not None and args.max_train_samples > 0:
+            max_train_samples = min(len(train_dataset), args.max_train_samples)
+            train_dataset = train_dataset.select(range(max_train_samples))
+        logger.debug(f"Example train_dataset[0]: {train_dataset[0]}")
+        tokenized_dataset = train_dataset.shuffle(seed=args.seed).map(
+            return_prompt_and_responses,
+            batched=True,
+            num_proc=args.preprocessing_num_workers,
+            remove_columns=train_dataset.column_names,
+            load_from_cache_file=not args.overwrite_cache,
+            desc="Running tokenizer on dataset",
+        )
+        train_dataset = tokenized_dataset.filter(within_token_limits)
+        max_train_samples = len(train_dataset)
+        logger.debug(f"Num train_samples: {len(train_dataset)}")
+        logger.debug("First train example:")
+        first_example = train_dataset[0]
+        logger.debug(f"prompt:\n{first_example['prompt']}")
+        logger.debug(f"chosen:\n{first_example['chosen']}")
+        logger.debug(f"rejected:\n{first_example['rejected']}")
+
+    eval_dataset = None
+    max_eval_samples = 0
+    if args.do_eval:
+        if "validation" not in raw_datasets:
+            raise ValueError("--do_eval requires a validation dataset")
+        eval_dataset = raw_datasets["validation"]
+        max_eval_samples = len(eval_dataset)
+        if args.max_eval_samples is not None and args.max_eval_samples > 0:
+            max_eval_samples = min(len(eval_dataset), args.max_eval_samples)
+            eval_dataset = eval_dataset.select(range(max_eval_samples))
+        logger.debug(f"Example eval_dataset[0]: {eval_dataset[0]}")
+        eval_dataset = eval_dataset.map(
+            return_prompt_and_responses,
+            batched=True,
+            num_proc=args.preprocessing_num_workers,
+            remove_columns=eval_dataset.column_names,
+            load_from_cache_file=not args.overwrite_cache,
+            desc="Running tokenizer on dataset",
+        )
+        eval_dataset = eval_dataset.filter(within_token_limits)
+        max_eval_samples = len(eval_dataset)
+        logger.debug(f"Num eval_samples: {len(eval_dataset)}")
+        logger.debug("First eval example:")
+        first_example = eval_dataset[0]
+        logger.debug(f"prompt:\n{first_example['prompt']}")
+        logger.debug(f"chosen:\n{first_example['chosen']}")
+        logger.debug(f"rejected:\n{first_example['rejected']}")
+
+    # Load model
+    torch_dtype = (
+        args.torch_dtype
+        if args.torch_dtype in ["auto", None]
+        else getattr(torch, args.torch_dtype)
+    )
+    world_size = int(os.environ.get("WORLD_SIZE", "1"))
+    ddp = world_size != 1
+    if ddp:
+        args.device_map = None
+    if args.device_map in ["None", "none", ""]:
+        args.device_map = None
+    logger.info(f"Device map: {args.device_map}")
+    if args.qlora and is_deepspeed_zero3_enabled():
+        logger.warning("ZeRO3 are both currently incompatible with QLoRA.")
+    config = AutoConfig.from_pretrained(
+        args.model_name_or_path,
+        trust_remote_code=args.trust_remote_code,
+        dtype=torch_dtype,
+        cache_dir=args.cache_dir
+    )
+    if args.load_in_4bit or args.load_in_8bit:
+        logger.info(f"Quantizing model, load_in_4bit: {args.load_in_4bit}, load_in_8bit: {args.load_in_8bit}")
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model_name_or_path,
+        config=config,
+        dtype=torch_dtype,
+        low_cpu_mem_usage=(not is_deepspeed_zero3_enabled()),
+        device_map=args.device_map,
+        trust_remote_code=args.trust_remote_code,
+        quantization_config=BitsAndBytesConfig(
+            load_in_4bit=args.load_in_4bit,
+            load_in_8bit=args.load_in_8bit,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch_dtype,
+        ) if args.qlora else None,
+    )
+    if args.peft_path:
+        if not os.path.isdir(args.peft_path):
+            raise ValueError(f"peft_path does not exist: {args.peft_path}")
+        logger.info(f"Continue DPO from SFT adapter: {args.peft_path}")
+        model = PeftModel.from_pretrained(model, args.peft_path, is_trainable=True)
+
+    # Patch MoE modules for DeepSpeed ZeRO-3
+    if getattr(config, "model_type", None) == "mixtral" and is_deepspeed_zero3_enabled():
+        from deepspeed.utils import set_z3_leaf_modules
+        from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
+        set_z3_leaf_modules(model, [MixtralSparseMoeBlock])
+
+    if getattr(config, "model_type", None) == "deepseek_v3" and is_deepspeed_zero3_enabled():
+        for layer in model.model.layers:
+            if 'DeepseekV3MoE' in str(type(layer.mlp)):
+                layer.mlp._z3_leaf = True
+
+    if getattr(config, "model_type", None) == "qwen3_moe" and is_deepspeed_zero3_enabled():
+        from deepspeed.utils import set_z3_leaf_modules
+        from transformers.models.qwen3_moe.modeling_qwen3_moe import Qwen3MoeSparseMoeBlock
+        set_z3_leaf_modules(model, [Qwen3MoeSparseMoeBlock])
+
+    if getattr(config, "model_type", None) == "qwen3_5_moe" and is_deepspeed_zero3_enabled():
+        from deepspeed.utils import set_z3_leaf_modules
+        from transformers.models.qwen3_5_moe.modeling_qwen3_5_moe import Qwen3_5MoeSparseMoeBlock
+        set_z3_leaf_modules(model, [Qwen3_5MoeSparseMoeBlock])
+
+    # fixed FP16 ValueError
+    for param in filter(lambda p: p.requires_grad, model.parameters()):
+        param.data = param.data.to(torch.float32)
+
+    # Initialize our Trainer
+    if args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
+        model.config.use_cache = False
+    else:
+        model.config.use_cache = True
+
+    training_args = DPOConfig(
+        beta=args.beta,
+        max_length=full_max_length,
+        per_device_train_batch_size=args.per_device_train_batch_size,
+        per_device_eval_batch_size=args.per_device_eval_batch_size,
+        max_steps=args.max_steps,
+        logging_steps=args.logging_steps,
+        save_steps=args.save_steps,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
+        gradient_checkpointing=args.gradient_checkpointing,
+        learning_rate=args.learning_rate,
+        eval_strategy=args.eval_strategy,
+        eval_steps=args.eval_steps,
+        output_dir=args.output_dir,
+        report_to=args.report_to,
+        lr_scheduler_type=args.lr_scheduler_type,
+        warmup_steps=args.warmup_steps,
+        weight_decay=args.weight_decay,
+        optim=args.optim,
+        bf16=args.bf16,
+        fp16=args.fp16,
+        remove_unused_columns=args.remove_unused_columns,
+        seed=args.seed,
+        run_name=f"dpo_v1",
+    )
+
+    # Initialize DPO trainer
+    peft_config = None
+    if args.use_peft:
+        logger.info("Fine-tuning method: LoRA(PEFT)")
+        if args.peft_path:
+            logger.info("Reuse the trainable SFT adapter instead of creating a new adapter")
+        else:
+            target_modules = args.target_modules.split(',') if args.target_modules else None
+            if target_modules and 'all' in target_modules:
+                target_modules = find_all_linear_names(model, int4=args.load_in_4bit, int8=args.load_in_8bit)
+            logger.info(f"Peft target_modules: {target_modules}")
+            peft_config = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                target_modules=target_modules,
+                inference_mode=False,
+                r=args.lora_rank,
+                lora_alpha=args.lora_alpha,
+                lora_dropout=args.lora_dropout,
+            )
+    else:
+        logger.info("Fine-tuning method: Full parameters training")
+    trainer = DPOTrainer(
+        model,
+        ref_model=None if args.use_peft else deepcopy(model),
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        processing_class=tokenizer,
+        peft_config=peft_config if args.use_peft else None,
+    )
+    print_trainable_parameters(trainer.model)
+    if args.verify_reference_logps and args.use_peft and args.peft_path:
+        verify_reference_matches_initial_policy(
+            trainer,
+            args.output_dir,
+            args.reference_logps_tolerance,
+        )
+
+    # Training
+    if args.do_train:
+        if trainer.is_world_process_zero():
+            logger.info("*** Train ***")
+        train_result = trainer.train()
+        metrics = train_result.metrics
+        metrics["train_samples"] = max_train_samples
+        trainer.log_metrics("train", metrics)
+        trainer.save_metrics("train", metrics)
+        trainer.save_state()
+        if trainer.is_world_process_zero():
+            logger.debug(f"Training metrics: {metrics}")
+            logger.info(f"Saving model checkpoint to {args.output_dir}")
+            trainer.save_model(args.output_dir)
+            tokenizer.save_pretrained(args.output_dir)
+            trainer.model.save_pretrained(args.output_dir)
+
+    # Evaluation
+    if args.do_eval:
+        if trainer.is_world_process_zero():
+            logger.info("*** Evaluate ***")
+        metrics = trainer.evaluate()
+        metrics["eval_samples"] = max_eval_samples
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
+        if trainer.is_world_process_zero():
+            logger.debug(f"Eval metrics: {metrics}")
+
+
+if __name__ == "__main__":
+    main()

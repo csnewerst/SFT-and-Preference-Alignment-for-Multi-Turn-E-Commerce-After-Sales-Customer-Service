@@ -1,0 +1,76 @@
+{
+  "scenario_version": "1.0.0",
+  "orders": [
+    {
+      "order_id": "EC-1001",
+      "payment_status": "paid",
+      "fulfillment_status": "delivered",
+      "days_since_delivery": 2,
+      "identity_verified": true,
+      "item_summary": "无线耳机 x1",
+      "after_sales_request": null,
+      "tool_failures": {}
+    },
+    {
+      "order_id": "EC-1002",
+      "payment_status": "paid",
+      "fulfillment_status": "delivered",
+      "days_since_delivery": 12,
+      "identity_verified": true,
+      "item_summary": "运动鞋 x1",
+      "after_sales_request": null,
+      "tool_failures": {}
+    },
+    {
+      "order_id": "EC-1003",
+      "payment_status": "paid",
+      "fulfillment_status": "shipped",
+      "days_since_delivery": null,
+      "identity_verified": true,
+      "item_summary": "保温杯 x1",
+      "after_sales_request": null,
+      "tool_failures": {}
+    },
+    {
+      "order_id": "EC-1004",
+      "payment_status": "paid",
+      "fulfillment_status": "delivered",
+      "days_since_delivery": 1,
+      "identity_verified": false,
+      "item_summary": "键盘 x1",
+      "after_sales_request": null,
+      "tool_failures": {}
+    },
+    {
+      "order_id": "EC-1005",
+      "payment_status": "paid",
+      "fulfillment_status": "delivered",
+      "days_since_delivery": 3,
+      "identity_verified": true,
+      "item_summary": "台灯 x1",
+      "after_sales_request": {
+        "request_id": "ASR-EC-1005-001",
+        "request_type": "return_refund",
+        "reason": "quality_issue",
+        "status": "submitted"
+      },
+      "tool_failures": {}
+    },
+    {
+      "order_id": "EC-FAIL-001",
+      "payment_status": "paid",
+      "fulfillment_status": "delivered",
+      "days_since_delivery": 1,
+      "identity_verified": true,
+      "item_summary": "数据线 x1",
+      "after_sales_request": null,
+      "tool_failures": {
+        "query_order_status": {
+          "code": "UPSTREAM_TIMEOUT",
+          "message": "订单服务暂时超时，请稍后重试。",
+          "retryable": true
+        }
+      }
+    }
+  ]
+}

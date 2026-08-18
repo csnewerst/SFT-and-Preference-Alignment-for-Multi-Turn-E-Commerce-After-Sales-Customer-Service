@@ -1,0 +1,86 @@
+{
+  "case_count": 600,
+  "category_metrics": {
+    "anti_hallucination": {
+      "passed": 33,
+      "task_success_rate": 0.8918918918918919,
+      "total": 37
+    },
+    "create": {
+      "passed": 106,
+      "task_success_rate": 0.9464285714285714,
+      "total": 112
+    },
+    "duplicate": {
+      "passed": 38,
+      "task_success_rate": 1.0,
+      "total": 38
+    },
+    "expired": {
+      "passed": 4,
+      "task_success_rate": 0.10526315789473684,
+      "total": 38
+    },
+    "identity": {
+      "passed": 10,
+      "task_success_rate": 0.2631578947368421,
+      "total": 38
+    },
+    "missing_order": {
+      "passed": 46,
+      "task_success_rate": 0.4107142857142857,
+      "total": 112
+    },
+    "not_delivered": {
+      "passed": 0,
+      "task_success_rate": 0.0,
+      "total": 37
+    },
+    "policy": {
+      "passed": 53,
+      "task_success_rate": 0.7066666666666667,
+      "total": 75
+    },
+    "status": {
+      "passed": 63,
+      "task_success_rate": 0.84,
+      "total": 75
+    },
+    "timeout": {
+      "passed": 25,
+      "task_success_rate": 0.6578947368421053,
+      "total": 38
+    }
+  },
+  "eligible_auto_resolution_count": 524,
+  "error_counts": {
+    "forbidden_tool": 92,
+    "goal_state_not_reached": 4,
+    "hallucinated_state": 16,
+    "incomplete_resolution": 151,
+    "missing_final_answer": 7,
+    "parse_error": 7,
+    "unexpected_tool_outcome": 144,
+    "unsupported_state:delivered": 3,
+    "unsupported_state:paid": 1,
+    "unsupported_state:refunded": 3,
+    "unsupported_state:shipped": 9,
+    "wrong_argument": 144,
+    "wrong_tool": 144
+  },
+  "metrics": {
+    "answer_requirements_met": 0.7483333333333333,
+    "arguments_valid": 0.76,
+    "eligible_auto_resolution_rate": 0.6545801526717557,
+    "facts_faithful": 0.9733333333333334,
+    "final_answer_present": 0.9883333333333333,
+    "forbidden_tool_absent": 0.8466666666666667,
+    "observation_outcomes_valid": 0.76,
+    "parse_success": 0.9883333333333333,
+    "state_assertions_met": 0.9933333333333333,
+    "task_success_rate": 0.63,
+    "tool_selection_valid": 0.76,
+    "within_step_limit": 1.0
+  },
+  "trace_count": 600
+}

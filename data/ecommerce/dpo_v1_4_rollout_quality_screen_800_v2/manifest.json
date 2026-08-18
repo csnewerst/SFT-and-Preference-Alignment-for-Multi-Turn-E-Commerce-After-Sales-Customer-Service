@@ -1,0 +1,49 @@
+{
+  "config_sha256": "e6e3af470e9a29dfea84685d59ab40afcd36e961e8d9cf36e8e99656349ba059",
+  "dataset_id": "ecommerce-dpo-v1.4-quality",
+  "profile": "screen",
+  "schema_version": "1.0",
+  "splits": {
+    "train": {
+      "artifact": {
+        "count": 720,
+        "sha256": "be20e12b4fbb65a591d9f45a3e8c96ccfa2820ddfa8e7fac0d7cc3822a76bc4f"
+      },
+      "bucket_counts": {
+        "must_continue": 259,
+        "must_stop": 259,
+        "parameter": 29,
+        "response": 173
+      },
+      "input_count": 921,
+      "max_pairs_for_one_parent": 1,
+      "maximum_margin": 0.8238567073170732,
+      "mean_logp_margin": -1.0613493054318988,
+      "minimum_margin": -3.0976430976430978,
+      "nonpositive_margin_fraction": 0.6402777777777777,
+      "selected_count": 720,
+      "unique_parent_count": 720
+    },
+    "validation": {
+      "artifact": {
+        "count": 80,
+        "sha256": "940816b594b875c82e9aabcecae6e3be3be5c7a11a19f168d4958de0b4e61cf7"
+      },
+      "bucket_counts": {
+        "must_continue": 29,
+        "must_stop": 29,
+        "parameter": 3,
+        "response": 19
+      },
+      "input_count": 103,
+      "max_pairs_for_one_parent": 1,
+      "maximum_margin": 0.7825731981981983,
+      "mean_logp_margin": -1.08145217090095,
+      "minimum_margin": -2.9908459595959593,
+      "nonpositive_margin_fraction": 0.6375,
+      "selected_count": 80,
+      "unique_parent_count": 80
+    }
+  },
+  "status": "quality_selected_training_data_not_formal_evaluation"
+}

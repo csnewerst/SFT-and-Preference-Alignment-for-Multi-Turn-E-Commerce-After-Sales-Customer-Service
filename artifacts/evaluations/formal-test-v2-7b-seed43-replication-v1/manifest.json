@@ -1,0 +1,123 @@
+{
+  "captured_at_utc": "2026-08-10T04:36:41.408447+00:00",
+  "command": "bash scripts/ecommerce/run_7b_seed_replication_eval.sh",
+  "config": {
+    "data": {
+      "dpo_root": "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2",
+      "dpo_train_count": 720,
+      "dpo_validation_count": 80,
+      "formal_test_v2_count": 600,
+      "formal_test_v2_manifest_sha256": "76285f06b871fb40f8bcad69986c9ea99c203df60fe23be567e3d7318d0ba74a",
+      "sft_root": "data/ecommerce/domain_train_v1_3_2_zh",
+      "sft_train_count": 10800,
+      "sft_validation_count": 1200
+    },
+    "dpo": {
+      "beta": 0.1,
+      "effective_batch_size": 16,
+      "gradient_accumulation_steps": 8,
+      "learning_rate": 2e-06,
+      "max_steps": 20,
+      "micro_batch_size": 2,
+      "pre_registered_checkpoint": 5,
+      "reference_logps_tolerance": 0.0001,
+      "reference_policy": "frozen_copy_of_loaded_sft_adapter",
+      "scheduler": "cosine",
+      "seed": 43,
+      "start_from": "seed43_sft_checkpoint_200",
+      "warmup_steps": 1,
+      "weight_decay": 0.01
+    },
+    "evaluation_policy": {
+      "bootstrap_resamples": 10000,
+      "bootstrap_seed": 20260809,
+      "configuration_frozen": true,
+      "formal_test_use": "post_hoc_fixed_configuration_seed_robustness_only",
+      "initial_run_reused": "formal-test-v2-7b-final-v2/initial_eval",
+      "no_checkpoint_reselection": true
+    },
+    "model": {
+      "aggregate_file_sha256": "4b0ff1363802cb9711c38f3f511bd813c46f174da0e04cc1d142276ada48223a",
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "precision": "bfloat16",
+      "quantization": "none"
+    },
+    "parent_plan": "configs/ecommerce/experiments_7b_v1.json",
+    "plan_id": "ecommerce-qwen25-7b-seed43-fixed-replication-v1",
+    "purpose": "Measure training-seed robustness without model or hyperparameter selection.",
+    "schema_version": "1.0",
+    "sft": {
+      "alpha": 16,
+      "data_seed": 43,
+      "dropout": 0.05,
+      "effective_batch_size": 32,
+      "epochs": 1.0,
+      "gradient_accumulation_steps": 16,
+      "learning_rate": 1e-05,
+      "method": "lora",
+      "micro_batch_size": 2,
+      "model_max_length": 1024,
+      "pre_registered_checkpoint": 200,
+      "rank": 8,
+      "scheduler": "cosine",
+      "seed": 43,
+      "target_modules": "all",
+      "warmup_steps": 10,
+      "weight_decay": 0.01
+    },
+    "status": "pre_registered_before_seed43_training"
+  },
+  "config_path": "configs/ecommerce/experiments_7b_seed43_replication.json",
+  "config_sha256": "1a657767b8118146121907bfc034aeb90e619119fa04cd4b1370b621fbcb93a0",
+  "git": {
+    "commit": "2b9b45d15833f4b3b18e3f8be5d93726446518f4",
+    "dirty": false,
+    "status": ""
+  },
+  "inputs": [
+    {
+      "bytes": 15242807272,
+      "file_count": 15,
+      "path": "models/base/Qwen2.5-7B-Instruct",
+      "sha256": "f4386a2792dffffe663bf67873c266039964c432ec7758086172d6ff9aa1d072",
+      "type": "directory"
+    },
+    {
+      "bytes": 4072412,
+      "file_count": 5,
+      "path": "data/ecommerce/formal_test_v2",
+      "sha256": "c0147bebde50c32a78c857bb65adeb64fe4fb90505f2f78ad2ade0a121b9840c",
+      "type": "directory"
+    },
+    {
+      "bytes": 242644948,
+      "file_count": 8,
+      "path": "experiments/local/7b/sft-r8-all-epoch1-seed43-replication-v1/adapter/checkpoint-200",
+      "sha256": "f5fd11edd03678aa47a77480563489ec614129be717da9efbd67d9793345f771",
+      "type": "directory"
+    },
+    {
+      "bytes": 334851768,
+      "file_count": 13,
+      "path": "experiments/local/7b/dpo-v1p4-full720-beta0p1-lr2e6-seed43-replication-v1/adapter/checkpoint-5",
+      "sha256": "b7c0e1d246c536c73683d7a94d51bc33facf0779bedddceedf1286978eaebf22",
+      "type": "directory"
+    }
+  ],
+  "run_id": "formal-test-v2-7b-seed43-replication-v1",
+  "runtime": {
+    "cuda_visible_devices": null,
+    "executable": "/root/miniconda3/bin/python",
+    "hostname": "autodl-container-s72tj2swur-034c2e1f",
+    "nvidia_smi": "0, NVIDIA A800-SXM4-80GB, GPU-48123848-f525-2250-64ce-c5548e56be4f, 81920 MiB, 580.126.09\n1, NVIDIA A800-SXM4-80GB, GPU-f93cc988-6f35-f49c-ab0d-2d6e6366ae3e, 81920 MiB, 580.126.09\n2, NVIDIA A800-SXM4-80GB, GPU-ade80e58-c74f-89d7-6780-35f93d98c753, 81920 MiB, 580.126.09\n3, NVIDIA A800-SXM4-80GB, GPU-a6ac4828-d54d-695d-4482-572e3b7c710c, 81920 MiB, 580.126.09",
+    "platform": "Linux-5.15.0-78-generic-x86_64-with-glibc2.35",
+    "python": "3.12.3 | packaged by Anaconda, Inc. | (main, May  6 2024, 19:46:43) [GCC 11.2.0]",
+    "torch": {
+      "cuda_available": true,
+      "cuda_version": "12.8",
+      "cudnn_version": 91002,
+      "version": "2.8.0+cu128"
+    }
+  },
+  "schema_version": "1.0"
+}

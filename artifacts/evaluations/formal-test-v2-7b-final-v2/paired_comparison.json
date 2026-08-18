@@ -1,0 +1,247 @@
+{
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 20260809,
+  "case_count": 600,
+  "paired_task_success_deltas": {
+    "dpo_minus_initial": {
+      "ci95_high": 0.25666666666666665,
+      "ci95_low": 0.16,
+      "estimate": 0.20833333333333334
+    },
+    "dpo_minus_sft": {
+      "ci95_high": 0.05333333333333334,
+      "ci95_low": 0.008333333333333333,
+      "estimate": 0.03
+    },
+    "sft_minus_initial": {
+      "ci95_high": 0.225,
+      "ci95_low": 0.13166666666666665,
+      "estimate": 0.17833333333333334
+    }
+  },
+  "runs": {
+    "dpo": {
+      "metrics": {
+        "answer_requirements_met": {
+          "ci95_high": 0.8033333333333333,
+          "ci95_low": 0.7366666666666667,
+          "estimate": 0.77
+        },
+        "arguments_valid": {
+          "ci95_high": 0.7816666666666665,
+          "ci95_low": 0.7116666666666667,
+          "estimate": 0.7466666666666667
+        },
+        "facts_faithful": {
+          "ci95_high": 0.9716666666666667,
+          "ci95_low": 0.94,
+          "estimate": 0.9566666666666667
+        },
+        "forbidden_tool_absent": {
+          "ci95_high": 0.8516666666666667,
+          "ci95_low": 0.79,
+          "estimate": 0.8216666666666667
+        },
+        "observation_outcomes_valid": {
+          "ci95_high": 0.78,
+          "ci95_low": 0.7116666666666667,
+          "estimate": 0.7466666666666667
+        },
+        "parse_success": {
+          "ci95_high": 0.9883333333333333,
+          "ci95_low": 0.9666666666666667,
+          "estimate": 0.9783333333333334
+        },
+        "state_assertions_met": {
+          "ci95_high": 0.9966666666666667,
+          "ci95_low": 0.9783333333333334,
+          "estimate": 0.9883333333333333
+        },
+        "task_success_rate": {
+          "ci95_high": 0.6133333333333333,
+          "ci95_low": 0.535,
+          "estimate": 0.575
+        },
+        "tool_selection_valid": {
+          "ci95_high": 0.7816666666666665,
+          "ci95_low": 0.7116666666666667,
+          "estimate": 0.7466666666666667
+        },
+        "within_step_limit": {
+          "ci95_high": 1.0,
+          "ci95_low": 1.0,
+          "estimate": 1.0
+        }
+      },
+      "tier_metrics": {
+        "challenge": {
+          "case_count": 150,
+          "ci95_high": 0.56,
+          "ci95_low": 0.4,
+          "estimate": 0.48
+        },
+        "compositional": {
+          "case_count": 150,
+          "ci95_high": 0.6,
+          "ci95_low": 0.44,
+          "estimate": 0.52
+        },
+        "iid": {
+          "case_count": 300,
+          "ci95_high": 0.7033333333333334,
+          "ci95_low": 0.5966666666666667,
+          "estimate": 0.65
+        }
+      }
+    },
+    "initial": {
+      "metrics": {
+        "answer_requirements_met": {
+          "ci95_high": 0.8466666666666667,
+          "ci95_low": 0.785,
+          "estimate": 0.8166666666666667
+        },
+        "arguments_valid": {
+          "ci95_high": 0.5283333333333333,
+          "ci95_low": 0.44666666666666666,
+          "estimate": 0.4866666666666667
+        },
+        "facts_faithful": {
+          "ci95_high": 0.9183333333333333,
+          "ci95_low": 0.8683333333333333,
+          "estimate": 0.8933333333333333
+        },
+        "forbidden_tool_absent": {
+          "ci95_high": 0.86,
+          "ci95_low": 0.7983333333333333,
+          "estimate": 0.83
+        },
+        "observation_outcomes_valid": {
+          "ci95_high": 0.5266666666666666,
+          "ci95_low": 0.44666666666666666,
+          "estimate": 0.4866666666666667
+        },
+        "parse_success": {
+          "ci95_high": 0.8783333333333333,
+          "ci95_low": 0.8233333333333334,
+          "estimate": 0.8516666666666667
+        },
+        "state_assertions_met": {
+          "ci95_high": 0.96,
+          "ci95_low": 0.9216666666666666,
+          "estimate": 0.9416666666666667
+        },
+        "task_success_rate": {
+          "ci95_high": 0.405,
+          "ci95_low": 0.3283333333333333,
+          "estimate": 0.36666666666666664
+        },
+        "tool_selection_valid": {
+          "ci95_high": 0.5266666666666666,
+          "ci95_low": 0.44666666666666666,
+          "estimate": 0.4866666666666667
+        },
+        "within_step_limit": {
+          "ci95_high": 1.0,
+          "ci95_low": 1.0,
+          "estimate": 1.0
+        }
+      },
+      "tier_metrics": {
+        "challenge": {
+          "case_count": 150,
+          "ci95_high": 0.5466666666666666,
+          "ci95_low": 0.38666666666666666,
+          "estimate": 0.4666666666666667
+        },
+        "compositional": {
+          "case_count": 150,
+          "ci95_high": 0.5066666666666667,
+          "ci95_low": 0.3466666666666667,
+          "estimate": 0.4266666666666667
+        },
+        "iid": {
+          "case_count": 300,
+          "ci95_high": 0.34,
+          "ci95_low": 0.23666666666666666,
+          "estimate": 0.2866666666666667
+        }
+      }
+    },
+    "sft": {
+      "metrics": {
+        "answer_requirements_met": {
+          "ci95_high": 0.7683333333333333,
+          "ci95_low": 0.6983333333333334,
+          "estimate": 0.7333333333333333
+        },
+        "arguments_valid": {
+          "ci95_high": 0.755,
+          "ci95_low": 0.6816666666666666,
+          "estimate": 0.7183333333333334
+        },
+        "facts_faithful": {
+          "ci95_high": 0.97,
+          "ci95_low": 0.9366666666666666,
+          "estimate": 0.9533333333333334
+        },
+        "forbidden_tool_absent": {
+          "ci95_high": 0.825,
+          "ci95_low": 0.7583333333333333,
+          "estimate": 0.7916666666666666
+        },
+        "observation_outcomes_valid": {
+          "ci95_high": 0.7533333333333333,
+          "ci95_low": 0.6816666666666666,
+          "estimate": 0.7183333333333334
+        },
+        "parse_success": {
+          "ci95_high": 0.9883333333333333,
+          "ci95_low": 0.9666666666666667,
+          "estimate": 0.9783333333333334
+        },
+        "state_assertions_met": {
+          "ci95_high": 0.9983333333333333,
+          "ci95_low": 0.9866666666666667,
+          "estimate": 0.9933333333333333
+        },
+        "task_success_rate": {
+          "ci95_high": 0.585,
+          "ci95_low": 0.505,
+          "estimate": 0.545
+        },
+        "tool_selection_valid": {
+          "ci95_high": 0.7533333333333333,
+          "ci95_low": 0.6816666666666666,
+          "estimate": 0.7183333333333334
+        },
+        "within_step_limit": {
+          "ci95_high": 1.0,
+          "ci95_low": 1.0,
+          "estimate": 1.0
+        }
+      },
+      "tier_metrics": {
+        "challenge": {
+          "case_count": 150,
+          "ci95_high": 0.54,
+          "ci95_low": 0.38,
+          "estimate": 0.46
+        },
+        "compositional": {
+          "case_count": 150,
+          "ci95_high": 0.5933333333333334,
+          "ci95_low": 0.43333333333333335,
+          "estimate": 0.5133333333333333
+        },
+        "iid": {
+          "case_count": 300,
+          "ci95_high": 0.66,
+          "ci95_low": 0.55,
+          "estimate": 0.6033333333333334
+        }
+      }
+    }
+  },
+  "schema_version": "1.0"
+}

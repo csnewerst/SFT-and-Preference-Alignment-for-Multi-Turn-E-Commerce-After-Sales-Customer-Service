@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "tools": [
+    {
+      "name": "query_order_status",
+      "description": "查询订单、支付、履约和现有售后状态。订单动态事实必须来自该工具。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "脱敏后的订单号，例如 EC-1001。",
+            "pattern": "^EC-[A-Z0-9-]+$"
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "check_return_policy",
+      "description": "根据订单状态、签收时长和问题类型查询适用的售后政策。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "脱敏后的订单号。",
+            "pattern": "^EC-[A-Z0-9-]+$"
+          },
+          "issue_type": {
+            "type": "string",
+            "description": "用户确认的问题类型。",
+            "enum": [
+              "no_reason",
+              "damaged",
+              "wrong_item",
+              "missing_item",
+              "quality_issue"
+            ]
+          }
+        },
+        "required": [
+          "order_id",
+          "issue_type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_after_sales_request",
+      "description": "在政策允许且用户身份已核验后创建退款、退货退款或换货申请。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "脱敏后的订单号。",
+            "pattern": "^EC-[A-Z0-9-]+$"
+          },
+          "request_type": {
+            "type": "string",
+            "description": "用户明确确认的售后类型。",
+            "enum": [
+              "refund_only",
+              "return_refund",
+              "exchange"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "结构化售后原因代码，与 issue_type 使用同一枚举。",
+            "enum": [
+              "no_reason",
+              "damaged",
+              "wrong_item",
+              "missing_item",
+              "quality_issue"
+            ]
+          }
+        },
+        "required": [
+          "order_id",
+          "request_type",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+bash scripts/ecommerce/run_7b_seed_replication_eval.sh

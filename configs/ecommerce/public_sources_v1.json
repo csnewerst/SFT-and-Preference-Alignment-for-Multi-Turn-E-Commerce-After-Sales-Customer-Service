@@ -1,0 +1,47 @@
+{
+  "registry_version": "1.0.0",
+  "sources": {
+    "bitext-support-2024": {
+      "adapter": "bitext",
+      "access": "automatic",
+      "dataset_repo": "bitext/Bitext-customer-support-llm-chatbot-training-dataset",
+      "default_revision": "main",
+      "language": "en",
+      "license": "cdla-sharing-1.0",
+      "pilot_limit": 1000,
+      "source_url": "https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset",
+      "usage": "rewrite_only"
+    },
+    "glaive-fc-v2": {
+      "adapter": "glaive",
+      "access": "automatic",
+      "dataset_repo": "glaiveai/glaive-function-calling-v2",
+      "default_revision": "main",
+      "language": "en",
+      "license": "apache-2.0",
+      "pilot_limit": 2000,
+      "source_url": "https://huggingface.co/datasets/glaiveai/glaive-function-calling-v2",
+      "usage": "structure_only"
+    },
+    "csds-emnlp21": {
+      "adapter": "csds",
+      "access": "manual-license-review",
+      "language": "zh",
+      "license": "not-stated",
+      "pilot_limit": 1000,
+      "rights_status": "externally-verified-2026-08-09",
+      "source_url": "https://github.com/xiaolinAndy/CSDS",
+      "usage": "research_rewrite_only"
+    },
+    "dch2-dialeval2": {
+      "adapter": "dch2",
+      "access": "user-agreement-required",
+      "language": "zh",
+      "license": "dialogues-non-commercial-research-only; annotations-cc-by-4.0",
+      "pilot_limit": 1000,
+      "rights_status": "externally-verified-2026-08-09",
+      "source_url": "https://dialeval-2.github.io/DCH-2/",
+      "usage": "research_structure_only"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "candidate_dir": "data/ecommerce/formal_test_v2",
+  "case_count": 600,
+  "development_dirs_checked": [
+    "data/ecommerce/rollout_prefreeze_v1_1_zh_1p5b_split/screen",
+    "data/ecommerce/rollout_prefreeze_v1_1_zh_1p5b_split/gate"
+  ],
+  "manifest_sha256": "76285f06b871fb40f8bcad69986c9ea99c203df60fe23be567e3d7318d0ba74a",
+  "minimum_cases": 600,
+  "reference_jsonl_checked": [
+    "data/ecommerce/domain_train_v1_3_2_zh/sft/train/data.jsonl",
+    "data/ecommerce/domain_train_v1_3_2_zh/sft/validation/data.jsonl",
+    "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2/train/records.jsonl",
+    "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2/validation/records.jsonl"
+  ],
+  "status": "passed"
+}

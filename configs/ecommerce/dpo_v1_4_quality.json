@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "ecommerce-dpo-v1.4-quality",
+  "status": "rollout_mined_screen_recipe_ready_requires_1p5b_direction_gate",
+  "source_dataset": "domain_train_v1_3_2_zh/dpo",
+  "size_policy": {
+    "screen_total": 800,
+    "screen_train": 720,
+    "screen_validation": 80,
+    "formal_target_total": 2500,
+    "formal_allowed_range": [2000, 3500],
+    "formal_train": 2250,
+    "formal_validation": 250,
+    "max_pairs_per_parent_per_split": 2
+  },
+  "screen_bucket_fractions": {
+    "must_continue": 0.36,
+    "must_stop": 0.36,
+    "wrong_action": 0.0,
+    "parameter": 0.04,
+    "response": 0.24
+  },
+  "formal_provisional_bucket_fractions": {
+    "must_continue": 0.30,
+    "must_stop": 0.30,
+    "wrong_action": 0.05,
+    "parameter": 0.10,
+    "response": 0.25
+  },
+  "hardness": {
+    "scoring_model": "frozen_selected_sft_adapter",
+    "metric": "chosen_mean_logp_minus_rejected_mean_logp",
+    "selection": "lowest_margin_first_within_bucket",
+    "required_fields": [
+      "chosen_mean_logp",
+      "rejected_mean_logp",
+      "mean_logp_margin"
+    ],
+    "reason": "prefer pairs the current SFT finds difficult; do not fill quotas with random easy negatives"
+  },
+  "candidate_pool_audit": {
+    "scored_train_count": 4436,
+    "margin_le_zero_count": 310,
+    "margin_le_zero_fraction": 0.06988277727682597,
+    "hard_buckets_with_margin_le_zero": ["must_stop"],
+    "decision": "do_not_train_or_scale_the_current_800_pair_selection; mine real frozen-SFT rollout failures for all five buckets"
+  },
+  "rollout_mined_audit": {
+    "input_rollouts": 2000,
+    "rollout_task_success_rate": 0.4875,
+    "selected_pairs": 1024,
+    "train_pairs": 921,
+    "train_margin_le_zero_fraction": 0.6601520086862106,
+    "train_bucket_counts": {
+      "must_continue": 311,
+      "must_stop": 401,
+      "wrong_action": 0,
+      "parameter": 33,
+      "response": 176
+    },
+    "decision": "build a balanced 720/80 screen set; do not synthesize wrong_action quota until model-confusable negatives are mined"
+  },
+  "acceptance": {
+    "screen_before_scale": true,
+    "screen_checkpoint_steps": [10, 25, 45],
+    "primary_gate": "paired task-success delta versus the same SFT is not significantly negative",
+    "blocking_regressions": [
+      "create_task_success",
+      "facts_faithful",
+      "forbidden_tool_absent",
+      "premature_stop"
+    ],
+    "formal_test_usage": "forbidden_until_7b_configuration_is_frozen"
+  }
+}

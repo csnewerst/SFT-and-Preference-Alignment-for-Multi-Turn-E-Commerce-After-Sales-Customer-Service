@@ -1,0 +1,112 @@
+{
+  "run_count": 2,
+  "runs": [
+    {
+      "command": "/root/miniconda3/bin/python training/supervised_finetuning.py --model_name_or_path models/base/Qwen2.5-7B-Instruct --device_map none --train_file_dir data/ecommerce/domain_train_v1_3_2_zh/sft/train --validation_file_dir data/ecommerce/domain_train_v1_3_2_zh/sft/validation --do_train True --do_eval True --use_peft True --target_modules all --lora_rank 8 --lora_alpha 16 --lora_dropout 0.05 --model_max_length 1024 --num_train_epochs 1 --max_steps -1 --per_device_train_batch_size 2 --per_device_eval_batch_size 2 --gradient_accumulation_steps 16 --learning_rate 1e-5 --lr_scheduler_type cosine --warmup_steps 10 --weight_decay 0.01 --logging_strategy steps --logging_steps 5 --logging_first_step True --eval_strategy steps --eval_steps 100 --save_strategy steps --save_steps 100 --save_total_limit 4 --gradient_checkpointing True --preprocessing_num_workers 8 --tool_format default --torch_dtype bfloat16 --bf16 True --fp16 False --seed 43 --data_seed 43 --report_to tensorboard --run_name sft-r8-all-epoch1-seed43-replication-v1 --cache_dir cache --output_dir experiments/local/7b/sft-r8-all-epoch1-seed43-replication-v1/adapter ",
+      "evaluation": {
+        "epoch": 1.0,
+        "eval_loss": 0.36862242221832275,
+        "eval_runtime": 91.5732,
+        "eval_samples": 1200,
+        "eval_samples_per_second": 13.104,
+        "eval_steps_per_second": 6.552,
+        "perplexity": 1.445741620691685
+      },
+      "git_commit": "e97df9f01b5c309b07b73ffa35c5e97030d8bbcd",
+      "git_dirty": false,
+      "hardware": {
+        "gpu_index": "0",
+        "gpu_name": "NVIDIA A800-SXM4-80GB",
+        "mean_active_utilization_pct": 95.16805170821792,
+        "peak_memory_mib": 29759.0,
+        "peak_power_w": 470.57,
+        "peak_temperature_c": 79.0,
+        "peak_utilization_pct": 100.0,
+        "sample_count": 3255
+      },
+      "lora": {
+        "adapter_bytes": 80792096,
+        "alpha": 16.0,
+        "rank": 8,
+        "target_modules": [
+          "down_proj",
+          "gate_proj",
+          "k_proj",
+          "o_proj",
+          "q_proj",
+          "up_proj",
+          "v_proj"
+        ]
+      },
+      "run_id": "sft-r8-all-epoch1-seed43-replication-v1",
+      "train": {
+        "epoch": 1.0,
+        "total_flos": 3.207767512598692e+17,
+        "train_loss": 0.7771267901510882,
+        "train_runtime": 3135.629,
+        "train_samples": 10800,
+        "train_samples_per_second": 3.444,
+        "train_steps_per_second": 0.108
+      }
+    },
+    {
+      "command": "/root/miniconda3/bin/python training/dpo_training.py --model_name_or_path models/base/Qwen2.5-7B-Instruct --device_map none --peft_path experiments/local/7b/sft-r8-all-epoch1-seed43-replication-v1/adapter/checkpoint-200 --train_file_dir data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2/train --validation_file_dir data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2/validation --do_train True --do_eval True --use_peft True --beta 0.1 --max_source_length 1024 --max_target_length 128 --max_steps 20 --per_device_train_batch_size 2 --per_device_eval_batch_size 2 --gradient_accumulation_steps 8 --learning_rate 2e-6 --lr_scheduler_type cosine --warmup_steps 1 --weight_decay 0.01 --logging_steps 5 --eval_strategy steps --eval_steps 5 --save_steps 5 --gradient_checkpointing True --preprocessing_num_workers 8 --tool_format default --torch_dtype bfloat16 --bf16 True --fp16 False --verify_reference_logps True --reference_logps_tolerance 1e-4 --seed 43 --report_to tensorboard --output_dir experiments/local/7b/dpo-v1p4-full720-beta0p1-lr2e6-seed43-replication-v1/adapter ",
+      "evaluation": {
+        "epoch": 0.4444444444444444,
+        "eval_entropy": 1.128596270084381,
+        "eval_logits/chosen": -1.2912194143152722,
+        "eval_logits/rejected": -1.2941491885698961,
+        "eval_logps/chosen": -33.91714742183685,
+        "eval_logps/rejected": -41.363363122940065,
+        "eval_loss": 0.44842520356178284,
+        "eval_mean_token_accuracy": 0.6726580239832401,
+        "eval_num_tokens": 334806.0,
+        "eval_rewards/accuracies": 0.925,
+        "eval_rewards/chosen": 0.38282508254051206,
+        "eval_rewards/margins": 0.649306346103549,
+        "eval_rewards/rejected": -0.2664812620729208,
+        "eval_runtime": 18.6997,
+        "eval_samples": 80,
+        "eval_samples_per_second": 4.278,
+        "eval_steps_per_second": 2.139
+      },
+      "git_commit": "2b9b45d15833f4b3b18e3f8be5d93726446518f4",
+      "git_dirty": false,
+      "hardware": {
+        "gpu_index": "0",
+        "gpu_name": "NVIDIA A800-SXM4-80GB",
+        "mean_active_utilization_pct": 93.30514705882354,
+        "peak_memory_mib": 38667.0,
+        "peak_power_w": 475.2,
+        "peak_temperature_c": 79.0,
+        "peak_utilization_pct": 100.0,
+        "sample_count": 306
+      },
+      "lora": {
+        "adapter_bytes": 80792096,
+        "alpha": 16.0,
+        "rank": 8,
+        "target_modules": [
+          "down_proj",
+          "gate_proj",
+          "k_proj",
+          "o_proj",
+          "q_proj",
+          "up_proj",
+          "v_proj"
+        ]
+      },
+      "run_id": "dpo-v1p4-full720-beta0p1-lr2e6-seed43-replication-v1",
+      "train": {
+        "epoch": 0.4444444444444444,
+        "total_flos": 1.5853637787574272e+16,
+        "train_loss": 0.5291102290153503,
+        "train_runtime": 241.4,
+        "train_samples": 720,
+        "train_samples_per_second": 1.326,
+        "train_steps_per_second": 0.083
+      }
+    }
+  ],
+  "schema_version": "1.0"
+}

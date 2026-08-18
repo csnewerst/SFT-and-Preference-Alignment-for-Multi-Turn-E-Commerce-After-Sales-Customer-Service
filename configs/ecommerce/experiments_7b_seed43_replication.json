@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "plan_id": "ecommerce-qwen25-7b-seed43-fixed-replication-v1",
+  "parent_plan": "configs/ecommerce/experiments_7b_v1.json",
+  "status": "pre_registered_before_seed43_training",
+  "purpose": "Measure training-seed robustness without model or hyperparameter selection.",
+  "model": {
+    "model_id": "Qwen/Qwen2.5-7B-Instruct",
+    "precision": "bfloat16",
+    "quantization": "none",
+    "aggregate_file_sha256": "4b0ff1363802cb9711c38f3f511bd813c46f174da0e04cc1d142276ada48223a"
+  },
+  "data": {
+    "sft_root": "data/ecommerce/domain_train_v1_3_2_zh",
+    "sft_train_count": 10800,
+    "sft_validation_count": 1200,
+    "dpo_root": "data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2",
+    "dpo_train_count": 720,
+    "dpo_validation_count": 80,
+    "formal_test_v2_count": 600,
+    "formal_test_v2_manifest_sha256": "76285f06b871fb40f8bcad69986c9ea99c203df60fe23be567e3d7318d0ba74a"
+  },
+  "sft": {
+    "method": "lora",
+    "target_modules": "all",
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "learning_rate": 1e-05,
+    "scheduler": "cosine",
+    "warmup_steps": 10,
+    "weight_decay": 0.01,
+    "epochs": 1.0,
+    "micro_batch_size": 2,
+    "gradient_accumulation_steps": 16,
+    "effective_batch_size": 32,
+    "model_max_length": 1024,
+    "seed": 43,
+    "data_seed": 43,
+    "pre_registered_checkpoint": 200
+  },
+  "dpo": {
+    "start_from": "seed43_sft_checkpoint_200",
+    "beta": 0.1,
+    "learning_rate": 2e-06,
+    "scheduler": "cosine",
+    "warmup_steps": 1,
+    "weight_decay": 0.01,
+    "max_steps": 20,
+    "micro_batch_size": 2,
+    "gradient_accumulation_steps": 8,
+    "effective_batch_size": 16,
+    "seed": 43,
+    "pre_registered_checkpoint": 5,
+    "reference_policy": "frozen_copy_of_loaded_sft_adapter",
+    "reference_logps_tolerance": 0.0001
+  },
+  "evaluation_policy": {
+    "configuration_frozen": true,
+    "no_checkpoint_reselection": true,
+    "initial_run_reused": "formal-test-v2-7b-final-v2/initial_eval",
+    "formal_test_use": "post_hoc_fixed_configuration_seed_robustness_only",
+    "bootstrap_seed": 20260809,
+    "bootstrap_resamples": 10000
+  }
+}
