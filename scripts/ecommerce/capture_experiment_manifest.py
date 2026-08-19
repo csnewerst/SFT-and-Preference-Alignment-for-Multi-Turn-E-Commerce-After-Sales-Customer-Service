@@ -11,7 +11,6 @@ import os
 import platform
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
@@ -91,7 +90,6 @@ def capture(output_dir: Path, run_id: str, config: Path, inputs: Iterable[Path],
     manifest = {
         "schema_version": "1.0",
         "run_id": run_id,
-        "captured_at_utc": datetime.now(timezone.utc).isoformat(),
         "command": command,
         "config_path": str(config),
         "config_sha256": _sha256(config),

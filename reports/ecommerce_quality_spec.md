@@ -2,7 +2,7 @@
 
 本文档定义进入 SFT、DPO 和正式评测之前必须执行的数据质量检查。真实数据、生成数据和审计产物均保存在 Git 忽略的 `data/ecommerce/` 下；仓库只提交检查代码、规范和合成测试 fixture。
 
-## 输入约定
+##输入约定
 
 - 数据目录递归读取 `*.jsonl`，路径必须能识别为 `train`、`validation` 或 `test`。
 - 每行必须是包含非空 `conversations` 的 JSON 对象；DPO 的 `chosen` 与 `rejected` 必须成对出现。
@@ -10,7 +10,7 @@
 - 最终标准化数据使用 `--require-metadata`，每行需要 `sample_id`、`group_id`、`source_id`、`scenario` 和 `intent`。
 - 元数据可以放在样本的 `metadata` 对象内，也可以通过 JSONL sidecar 提供。sidecar 每行以相对路径 `file` 和从 1 开始的 `row_index` 定位样本。
 
-## 阻断规则
+##阻断规则
 
 以下问题产生 `error`，命令返回非零状态：
 
@@ -24,7 +24,7 @@
 
 同一 split 内的完全重复和近重复当前记为 `warning`，需要在正式数据冻结前完成复核或去重。近重复默认使用字符 4-gram、64 位 SimHash 和汉明距离阈值 3；报告会注明阈值及候选对是否被上限截断。
 
-## 输出与执行
+##输出与执行
 
 ```bash
 python scripts/ecommerce/audit_ecommerce_data.py \

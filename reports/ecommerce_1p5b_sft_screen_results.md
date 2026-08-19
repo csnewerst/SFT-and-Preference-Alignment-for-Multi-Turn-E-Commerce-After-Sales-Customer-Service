@@ -1,12 +1,12 @@
 # 1.5B SFT 筛选实验结果
 
-## 1. 结论
+##1. 结论
 
 固定 200 条 screen 集上的 Initial 基座任务成功率为 13.5%。三组 all-linear LoRA 均带来显著提升，其中 r4 与 r16 的总体成功率相当，因此二者进入独立 600 条 gate；r64 没有表现出与四倍适配器成本相匹配的收益，q/v-only 则明显欠拟合。
 
 本阶段只用于选择 1.5B 的训练方案和验证业务链路，不把结果外推为 7B 正式模型效果。最终 SFT 方案由 600 条 gate 决定，screen 不重复用于最终报告。
 
-## 2. 可复现设置
+##2. 可复现设置
 
 - 基座模型：`Qwen/Qwen2.5-1.5B-Instruct`
 - 本地模型目录：`models/base/Qwen2.5-1.5B-Instruct`
@@ -28,7 +28,7 @@
 
 每个训练目录保存 `manifest.json`、`command.sh`、`environment.txt`、`git_status.txt`、训练日志、GPU 采样、adapter 和评测逐样本结果。
 
-## 3. 训练与验证集结果
+##3. 训练与验证集结果
 
 | 配置 | LoRA targets | 可训练参数 | adapter 大小 | 训练耗时 | 吞吐 samples/s | train loss | validation loss | PPL | 峰值显存 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -39,7 +39,7 @@
 
 验证 loss 随 rank 增大而下降，但该排序没有转化为 screen 业务成功率。因此模型选择不能只依赖 token-level loss。
 
-## 4. 固定 200 条 screen 业务结果
+##4. 固定 200 条 screen 业务结果
 
 | 配置 | 任务成功率（95% CI） | 相对 Initial 配对提升（95% CI） | 工具选择 | 参数正确 | 事实忠实 | 状态断言 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -60,7 +60,7 @@ r16 与 r4 的配对成功率差值为 -0.5pp，95% CI 为 [-9.0, +8.0]，screen
 | r64 all | 39.0% | 72.0% | 38.0% |
 | r16 q/v | 12.0% | 6.0% | 40.0% |
 
-## 5. 失败结构与筛选决策
+##5. 失败结构与筛选决策
 
 r4 与 r16 的总分接近但擅长场景不同：
 
@@ -76,7 +76,7 @@ r4 与 r16 的总分接近但擅长场景不同：
 3. gate 仍使用冻结的 IID / Compositional / Challenge = 300 / 150 / 150，不能根据 screen 失败案例修改。
 4. gate 结束后根据任务成功率、关键安全指标、分层退化和 adapter 成本选择一个 SFT 初始化点，再进行 DPO 组合与 beta 筛选。
 
-## 6. 600 条 SFT development gate 与 SFT 选择
+##6. 600 条 SFT development gate 与 SFT 选择
 
 | 配置 | 任务成功率（95% CI） | 工具选择 | 参数正确 | 事实忠实 | 禁止工具不触发 | 状态断言 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -94,7 +94,7 @@ r16-r4 的配对成功率差值为 -0.33pp，95% CI 为 [-5.33, +4.50]，两者�
 
 该 600 条集合已经用于选择 SFT parent，因此只能作为 development gate。它不得再用于修改规则后的最终系统结论；7B 正式 Initial/SFT/SFT+DPO 对比需要另建并一次性打开 formal test v2。
 
-## 7. DPO 5-step 冒烟与预算校准
+##7. DPO 5-step 冒烟与预算校准
 
 从 r4 和 r16 各自 adapter 继续训练同一个 response-only matched 数据，固定 beta 0.1、seed 42、BF16、有效 batch 16、5 steps。该实验只验证链路和资源，不用于模型选择。
 
@@ -109,7 +109,7 @@ r16-r4 的配对成功率差值为 -0.33pp，95% CI 为 [-5.33, +4.50]，两者�
 
 修复后的完整复验已经完成：response-only、等量多粒度、全量多粒度相对 SFT 分别回退 11.5、21.0、24.5 个百分点，且 checkpoint-50 仍显著回退。v1.3.2 DPO 不进入 beta 或 7B；完整结果与失败闭环见 `reports/ecommerce_1p5b_dpo_screen_results.md`。
 
-## 8. 远端结果位置
+##8. 远端结果位置
 
 - 训练聚合：`experiments/local/1p5b/sft_matrix_summary_v1.json`
 - SFT screen 聚合：`experiments/local/1p5b/sft_screen_comparison_v1.json`

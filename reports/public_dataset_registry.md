@@ -1,8 +1,5 @@
 # 电商售后公开数据源登记 v1
-
-更新时间：2026-08-09
-
-## 1. 登记原则
+##1. 登记原则
 
 公开数据只作为语言表达、多轮结构和 Function Calling 模式的原料，不能直接定义本项目的订单事实、售后政策或冻结测试答案。每个来源进入处理流水线前必须记录版本、许可、用途、PII 风险和采用决策。
 
@@ -14,7 +11,7 @@
 
 所有来源都必须经过字段审计、脱敏、精确去重、近重复检查和领域改写。来自公开数据的原始对话及其改写不得进入冻结测试集。
 
-## 2. 候选来源总表
+##2. 候选来源总表
 
 | ID | 数据集 | 语言/规模 | 已知许可或条款 | 拟用范围 | 决策 |
 |---|---|---|---|---|---|
@@ -23,9 +20,9 @@
 | `csds-emnlp21` | CSDS | 中文客服多轮对话 | 官方仓库未明确展示数据许可证 | 多轮客服语气、问题与处理进展结构 | `hold-license` |
 | `dch2-dialeval2` | DCH-2 | 中英各 4,390 段 | 需要提交 user agreement，受单独条款约束 | 多轮帮助台结构、任务完成与对话质量参考 | `hold-license` |
 
-## 3. 来源明细
+##3. 来源明细
 
-### 3.1 Bitext Customer Support LLM Chatbot Training Dataset
+###3.1 Bitext Customer Support LLM Chatbot Training Dataset
 
 - 登记 ID：`bitext-support-2024`
 - 官方页面：https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset
@@ -45,7 +42,7 @@
   - 不把许可标签视为已完成全部合规审计。
 - pilot 决策：`adopt-pilot`，先抽取最多 1,000 行做字段、重复率和领域覆盖审计。
 
-### 3.2 glaive-function-calling-v2
+###3.2 glaive-function-calling-v2
 
 - 登记 ID：`glaive-fc-v2`
 - 官方页面：https://huggingface.co/datasets/glaiveai/glaive-function-calling-v2
@@ -65,22 +62,22 @@
   - 不进入冻结测试集。
 - pilot 决策：`adopt-pilot`，按轨迹类型分层抽取最多 2,000 行，先统计解析成功率和模板污染率。
 
-### 3.3 CSDS
+###3.3 CSDS
 
 - 登记 ID：`csds-emnlp21`
 - 官方仓库：https://github.com/xiaolinAndy/CSDS
 - 论文：https://aclanthology.org/2021.emnlp-main.365/
 - 版本：官方仓库 `main`，正式采用前固定 commit
 - 语言/任务：中文客服多轮对话摘要；提供整体、用户视角和客服视角摘要，以及主题片段。
-- 已知许可证：截至 2026-08-09，官方 README 和仓库根目录未明确展示数据许可证。
+- 已知许可证：经核验，官方 README 和仓库根目录未明确展示数据许可证。
 - 数据与隐私：论文说明数据来自 JDDC 的真实电商售前/售后对话，并称隐私信息已按 JDDC 方式匿名化；进入本项目后仍必须二次扫描。
 - 潜在用途：
   - 中文多轮客服表达和对话进展结构。
   - 用户诉求、客服动作和主题切换的抽取原料。
 - 限制：任务本身是摘要，不包含本项目的工具状态和政策，不可直接作为工具调用监督数据。
-- 当前决策：`adopt-authorized-research`。2026-08-09 已完成外部权利核验；代码通过本地授权文件和 `--rights-acknowledged` 留存处理证据，不在仓库再分发原数据。
+- 当前决策：`adopt-authorized-research`。已完成外部权利核验；代码通过本地授权文件和 `--rights-acknowledged` 留存处理证据，不在仓库再分发原数据。
 
-### 3.4 DCH-2
+###3.4 DCH-2
 
 - 登记 ID：`dch2-dialeval2`
 - 官方页面：https://dialeval-2.github.io/DCH-2/
@@ -94,16 +91,16 @@
   - 多轮帮助台结构和任务是否解决的参考。
   - 构造任务完成与无效轮次的分析规则。
 - 限制：微博帮助台场景并不等于电商售后；数据再分发和训练用途必须服从单独协议。
-- 当前决策：`adopt-authorized-research`。2026-08-09 已完成外部权利核验；仅用于非商业研究项目，通过本地授权文件接入，不再分发原始对话。
+- 当前决策：`adopt-authorized-research`。已完成外部权利核验；仅用于非商业研究项目，通过本地授权文件接入，不再分发原始对话。
 
-## 4. Pilot 接入顺序
+##4. Pilot 接入顺序
 
 1. 自动接入 `bitext-support-2024`，建立通用客服表达清洗和领域筛选。
 2. 自动接入 `glaive-fc-v2`，建立工具轨迹解析和负例分类；三个工具的领域重写另行生成。
 3. CSDS 与 DCH-2 已完成权利核验并提供授权本地适配器；取得官方文件后纳入同一证据层。
 4. 四个来源都只进入来源证据层，不直接作为政策答案、工具 observation 或冻结测试集。
 
-## 5. 每次下载必须生成的 manifest
+##5. 每次下载必须生成的 manifest
 
 ```json
 {
@@ -125,7 +122,7 @@
 
 manifest 可以提交，但原始数据、清洗后的训练数据及生成对话继续保留在 `data/ecommerce/` 忽略目录中。
 
-## 6. 下载前检查清单
+##6. 下载前检查清单
 
 - [ ] 解析并记录完整 commit/revision。
 - [ ] 保存数据卡和许可证快照 URL。

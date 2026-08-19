@@ -1,16 +1,14 @@
 # Qwen2.5-1.5B 筛选实验 preflight 结果
-
-> 执行日期：2026-08-09
 > 状态：模型、数据派生、token长度和代码门禁通过；训练效果结果尚未产生。
 
-## 1. 代码与环境
+##1. 代码与环境
 
 - 分支：`codex-sync`；
 - 远端工作区：`/root/autodl-tmp/Resume/customer-service-posttraining`；
 - 相关测试：本地新增测试通过，远端1.5B准备与pre-freeze测试12/12通过；
 - 训练策略：1.5B主实验单卡BF16 LoRA，不使用DeepSpeed，多卡用于并行独立配置。
 
-## 2. 模型
+##2. 模型
 
 - 模型：`Qwen/Qwen2.5-1.5B-Instruct`；
 - 来源：ModelScope，revision `master`；
@@ -21,13 +19,13 @@
 
 模型和数据保留在AutoDL数据盘的Git忽略目录，没有上传Git。
 
-## 3. 训练数据确认
+##3. 训练数据确认
 
 - SFT：12,000，总切分10,800 train / 1,200 validation；内容集哈希`58578c61decb75e8c13c876655886a5953e2e4829c74f923c86e7cc355a8a5c6`；
 - DPO：5,000，总切分4,436 train / 564 validation；内容集哈希`69186aefa94f12f1ac5d3f5c276307f373828fabbaf1975ee31426991faef96d`；
 - 800条中文pre-freeze：IID 400、Compositional 200、Challenge 200，audit通过。
 
-## 4. pre-freeze开发拆分
+##4. pre-freeze开发拆分
 
 固定seed `20260809`，先保持tier比例，再在tier内保持category比例：
 
@@ -38,7 +36,7 @@
 
 两者都属于开发集，不是最终test。拆分脚本拒绝重复parent跨集合。
 
-## 5. DPO等量消融数据
+##5. DPO等量消融数据
 
 | variant | train | validation | train层级分布 |
 |---|---:|---:|---|
@@ -48,7 +46,7 @@
 
 该设计分别隔离“偏好层级结构”和“完整数据规模”的影响，避免把1,750对与5,000对直接比较后误判。
 
-## 6. token长度实测
+##6. token长度实测
 
 使用Qwen2.5-1.5B tokenizer和训练工具格式审计全部12,000条SFT与5,000对DPO：
 
@@ -70,7 +68,7 @@
 
 审计过程中修复了两项会污染实验的实现问题：tokenizer返回mapping时错误把字段数当token数；DPO入口原先用字符数过滤token上限且训练shuffle没有显式seed。修复后才允许进入测速。
 
-## 7. 下一门槛
+##7. 下一门槛
 
 单卡100步SFT-R16中心配置已通过：
 

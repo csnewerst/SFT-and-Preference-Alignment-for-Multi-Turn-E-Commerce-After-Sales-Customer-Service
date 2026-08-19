@@ -1,14 +1,11 @@
 # 电商售后领域重构 pilot v1 结果
-
-运行日期：2026-08-09（Asia/Shanghai）
-
 生成器版本：`1.0.0`
 
 代码提交：`fb045f9`
 
 运行环境：AutoDL base；数据位于 Git 忽略的 `data/ecommerce/domain_pilot_v1/`。
 
-## 数据规模
+##数据规模
 
 | 任务 | 总量 | train | validation | test | 内容集合 SHA-256 |
 |---|---:|---:|---:|---:|---|
@@ -24,7 +21,7 @@
 
 生成前共考虑 2,850 条来源证据。为满足汉明距离不大于 3 的 SimHash 门禁，SFT 淘汰 572 条近重复候选，DPO 淘汰 295 对近重复候选。
 
-## 场景分布
+##场景分布
 
 | 场景 | SFT | DPO |
 |---|---:|---:|
@@ -39,7 +36,7 @@
 | `missing_order_id` | 310 | 123 |
 | `order_not_found` | 124 | 53 |
 
-## 质量门禁
+##质量门禁
 
 - SFT 严格 metadata/schema/PII/重复/跨 split 泄漏审计：`passed=true`，零 issue。
 - DPO 严格审计：`passed=true`，零 issue。
@@ -55,7 +52,7 @@
 | SFT | 81 | 791 | 1,222 | 1,228 | 1,238 |
 | DPO | 117 | 827 | 1,258 | 1,265 | 1,273 |
 
-## 当前限制与下一验收项
+##当前限制与下一验收项
 
 - 当前正式 pilot 的实际来源为 Bitext 与 glaive；CSDS/DCH-2 已完成权利核验和适配器测试，但 AutoDL 尚未取得官方数据文件。
 - 自动规则可以证明结构和业务状态一致，不能替代对自然度、模板感、chosen/rejected 难度和语气的人工判断。

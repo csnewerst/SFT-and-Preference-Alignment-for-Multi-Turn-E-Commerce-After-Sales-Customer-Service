@@ -1,6 +1,6 @@
 # 1.5B 多粒度DPO等量消融结果
 
-## 对照设置
+##对照设置
 
 两组数据来自同一rollout hard-negative质量集，统一为173 train / 19 validation，并固定相同SFT起点、数据split、父样本约束、训练步数、beta、学习率、batch和seed：
 
@@ -9,7 +9,7 @@
 
 训练使用Qwen2.5-1.5B-Instruct、BF16 LoRA、`beta=0.1`、学习率`5e-6`、effective batch 16、seed 42；评测使用同一200条开发screen和10,000次paired bootstrap。
 
-## 实验结果
+##实验结果
 
 | Checkpoint | Response-only task success | Multigranularity task success | Multi - Response（95% CI） |
 |---:|---:|---:|---:|

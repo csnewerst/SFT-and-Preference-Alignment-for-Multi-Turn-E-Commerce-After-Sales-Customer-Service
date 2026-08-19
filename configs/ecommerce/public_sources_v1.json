@@ -29,7 +29,7 @@
       "language": "zh",
       "license": "not-stated",
       "pilot_limit": 1000,
-      "rights_status": "externally-verified-2026-08-09",
+      "rights_status": "externally-verified",
       "source_url": "https://github.com/xiaolinAndy/CSDS",
       "usage": "research_rewrite_only"
     },
@@ -39,7 +39,7 @@
       "language": "zh",
       "license": "dialogues-non-commercial-research-only; annotations-cc-by-4.0",
       "pilot_limit": 1000,
-      "rights_status": "externally-verified-2026-08-09",
+      "rights_status": "externally-verified",
       "source_url": "https://dialeval-2.github.io/DCH-2/",
       "usage": "research_structure_only"
     }

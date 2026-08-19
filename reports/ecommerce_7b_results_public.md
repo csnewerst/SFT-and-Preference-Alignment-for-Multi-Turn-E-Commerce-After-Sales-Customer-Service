@@ -1,6 +1,6 @@
 # Qwen2.5-7B 电商售后主实验结果
 
-## 实验设置
+##实验设置
 
 - 模型：Qwen2.5-7B-Instruct
 - 训练：BF16 LoRA SFT → DPO
@@ -13,7 +13,7 @@
 
 SFT使用all-linear LoRA、rank 8、alpha 16、学习率`1e-5`、effective batch 32、seed/data seed 42；DPO从SFT适配器继续训练，使用`beta=0.1`、学习率`2e-6`、effective batch 16、seed 42。
 
-## Formal test v2
+##Formal test v2
 
 | 模型 | Task success | Eligible auto-resolution | 工具/参数正确 | 事实忠实 | 禁用工具未调用 | Parse success |
 |---|---:|---:|---:|---:|---:|---:|
@@ -29,7 +29,7 @@ SFT使用all-linear LoRA、rank 8、alpha 16、学习率`1e-5`、effective batch
 
 DPO相对SFT的工具选择与参数正确率均提升`2.83pp`，禁止工具未调用提升`3.00pp`，answer requirements提升`3.67pp`。
 
-## 第二训练seed复现
+##第二训练seed复现
 
 固定相同配置，仅将训练seed/data seed改为43：
 
@@ -40,7 +40,7 @@ DPO相对SFT的工具选择与参数正确率均提升`2.83pp`，禁止工具未
 
 DPO - SFT的task success为`+2.67pp`，95% CI `[+0.33, +5.00]`，与seed 42保持同方向收益。
 
-## 复现证据
+##复现证据
 
 - 数据：`data/ecommerce/domain_train_v1_3_2_zh/`、`data/ecommerce/dpo_v1_4_rollout_quality_screen_800_v2/`
 - 冻结测试：`data/ecommerce/formal_test_v2/`

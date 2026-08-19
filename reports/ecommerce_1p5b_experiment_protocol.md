@@ -2,7 +2,7 @@
 
 > 状态：协议与执行脚本已实现，训练尚未开始。任何结果必须由实际运行产物回填，禁止将计划值写成实测值。
 
-## 1. 实验目的
+##1. 实验目的
 
 1. 验证 SFT 相对 Initial 是否学习到条件化工具流程，而非固定工具链。
 2. 在控制数据量后，比较 response-only 与多粒度 DPO 的贡献。
@@ -11,7 +11,7 @@
 
 1.5B 是筛选模型，不承担最终业务效果结论。800 条 rollout 是 pre-freeze 开发候选，不是正式 test。
 
-## 2. 固定数据和评测切分
+##2. 固定数据和评测切分
 
 - SFT：10,800 train / 1,200 validation；
 - DPO：4,436 train / 564 validation；
@@ -23,7 +23,7 @@
 
 正式执行前必须记录模型 revision、模型文件哈希、数据目录聚合哈希、rollout artifact 哈希和 Git commit。
 
-## 3. SFT 消融
+##3. SFT 消融
 
 共同配置：BF16 LoRA、1 epoch、`lr=2e-5`、cosine、warmup steps 10、weight decay 0.01、有效 batch 32、gradient checkpointing、seed/data_seed 42。最大长度由 token 审计决定，目标截断率不高于 1%。
 
@@ -36,7 +36,7 @@
 
 保持 `alpha/rank=2`。100步benchmark实测完整单次SFT训练本体约18分钟，因此四种配置直接使用相同的完整10,800条train和1,200条validation，避免子集分布成为额外变量；四组只在screen上选择，最多两个配置进入gate。训练 loss 只作诊断；checkpoint 由rollout、验证指标和失败类型共同选择。
 
-## 4. DPO 消融
+##4. DPO 消融
 
 DPO 必须从同一个入围 SFT adapter 继续训练，并继承其 LoRA 结构。TRL 在训练器初始化时复制该 SFT adapter 为冻结 `ref` adapter；第一个 optimizer step 前必须通过 policy/reference log-prob 数值等价前检。共同配置：BF16、`lr=5e-6`、weight decay 0.01、有效 batch 16、seed 42。
 
@@ -50,13 +50,13 @@ DPO 必须从同一个入围 SFT adapter 继续训练，并继承其 LoRA 结构
 
 matched 数据运行 99 steps，full 数据运行 278 steps，均对应固定数据的一次受控遍历；warmup 为总 steps 的 3% 向上取整，即 3/9 steps。随后只对完整多粒度数据比较 `beta=0.05/0.1/0.3`。最终 SFT 与 DPO 使用第二种子 `20260809` 复验，失败配置不重复消耗算力。
 
-## 5. 资源策略与时间
+##5. 资源策略与时间
 
 1.5B 主实验单卡运行，不使用 DeepSpeed。四张 A800 用于并行独立配置；可另做固定步数的单卡与两卡 ZeRO-2 吞吐验证，但不混入模型效果结论。
 
 当前墙钟预估为 6～10 小时。该数字不是实测；第一组 100 步 benchmark 后必须用真实 step time 和 rollout latency 更新 ETA。
 
-## 6. 每个 run 的必备证据
+##6. 每个 run 的必备证据
 
 - `manifest.json`：配置、输入哈希、Git commit、dirty 状态、Python/PyTorch/CUDA/GPU；
 - `command.sh`、`environment.txt`、`git_status.txt`；
@@ -69,13 +69,13 @@ matched 数据运行 99 steps，full 数据运行 278 steps，均对应固定数
 
 核心业务指标包括 task success、工具选择/序列、参数精确正确率、多步创建、提前停止、不必要调用、政策合规、observation 忠实和无依据事实率。模型差异使用相同样本配对比较，报告绝对百分点与 bootstrap 95% 区间。
 
-## 7. 执行门槛
+##7. 执行门槛
 
 进入训练前：数据与token审计通过、200/600拆分稳定、模型与数据哈希齐全、单卡100步无OOM、DPO policy初始状态与SFT adapter一致。
 
 进入3B前：SFT明确超过Initial；多粒度DPO在总体、Compositional、多步创建或参数正确率上稳定超过SFT/response-only，且政策合规、忠实性、提前停止和不必要调用无关键回退。
 
-## 8. 已实现入口
+##8. 已实现入口
 
 - `configs/ecommerce/experiments_1p5b_v1.json`：机器可读实验协议；
 - `scripts/ecommerce/prepare_1p5b_eval_split.py`：确定性 screen/gate 拆分；

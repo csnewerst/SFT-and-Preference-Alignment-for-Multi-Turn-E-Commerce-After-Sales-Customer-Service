@@ -234,7 +234,6 @@ def write_frozen_test(output_dir: Path) -> Dict[str, Any]:
     manifest = {
         "dataset_version": "frozen-test-v1",
         "generator_version": GENERATOR_VERSION,
-        "protocol_date": "2026-08-09",
         "case_count": len(cases),
         "category_counts": dict(sorted(Counter(case["category"] for case in cases).items())),
         "files": [

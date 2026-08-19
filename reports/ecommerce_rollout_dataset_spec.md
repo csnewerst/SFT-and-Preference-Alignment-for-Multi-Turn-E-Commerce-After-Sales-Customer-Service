@@ -6,7 +6,7 @@
 >
 > 适用范围：Initial/SFT/SFT+DPO 的可执行多轮工具评测
 
-## 1. 核心结论
+##1. 核心结论
 
 正式 rollout 集**不直接等于从公开数据集中筛选出的客服对话**。
 
@@ -29,7 +29,7 @@ CSDS、DCH-2 等公开数据提供：
 
 公开对话中的订单事实、平台政策、客服承诺和处理结果不能直接作为本项目真值。正确方式是保留表达和对话骨架，重新绑定版本化业务状态，并通过模拟器执行得到 oracle。
 
-## 2. 数据来源分工
+##2. 数据来源分工
 
 | 来源 | 在 rollout 集中的用途 | 不直接采用的内容 |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ CSDS、DCH-2 等公开数据提供：
 | 自建 Challenge | 缺参、冲突、诱导猜测、重复申请、工具失败 | 未经规则或人工复核的开放式模型生成答案 |
 | 模拟器 | 环境状态、observation、状态转移和终态 | 无自然语言表达，需要与真实对话骨架结合 |
 
-## 3. 先切分，再做任何改写
+##3. 先切分，再做任何改写
 
 必须在生成、翻译、改写和状态绑定之前完成来源级切分。
 
@@ -61,7 +61,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 测试池一旦冻结，其失败样本不得直接改写后放回当前版本训练集。若进入下一版训练数据，必须保留旧测试结果，并建立新的测试版本。
 
-## 4. 正式测试集组成
+##4. 正式测试集组成
 
 目标规模为 500～1,000 条可执行案例。
 
@@ -73,13 +73,13 @@ source_id + source_record_id + conversation_id + parent_id
 
 九条 `ecommerce_rollout_dev_v1` 只用于开发和回归，不计入正式规模，也不应复制扩写成最终测试集。
 
-### 4.1 IID
+###4.1 IID
 
 - 从保留的 CSDS/DCH-2 test 来源池抽取自然表达和对话骨架
 - 使用训练中出现过的场景类型，但订单、对话、父样本和文本均未见
 - 保持与目标业务接近的意图和难度分布
 
-### 4.2 Compositional
+###4.2 Compositional
 
 按因子组合生成训练中未出现的组合：
 
@@ -95,7 +95,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 例如训练中分别见过“身份未核验”和“破损换货”，测试可以保留“身份未核验×错发退货退款”组合，但不能复制训练话术。
 
-### 4.3 Challenge
+###4.3 Challenge
 
 至少覆盖：
 
@@ -110,16 +110,16 @@ source_id + source_record_id + conversation_id + parent_id
 - observation 包含相似字段，诱导复制错误参数
 - 多轮后订单号、问题类型或用户目标发生变化
 
-## 5. 构建流水线
+##5. 构建流水线
 
-### 步骤 1：来源固定与清洗
+###步骤 1：来源固定与清洗
 
 1. 记录数据集版本、commit/hash、下载日期和本地文件哈希。
 2. 清除真实姓名、电话、地址、账号、订单号和其他 PII。
 3. 做精确、规范化文本、n-gram、SimHash 和语义近重复检查。
 4. 将来源会话按父样本分配到 train/validation/test 池。
 
-### 步骤 2：提取表达骨架
+###步骤 2：提取表达骨架
 
 从公开会话中提取：
 
@@ -132,7 +132,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 不复制不可验证的最终业务答案。表达骨架应形成结构化中间表示，而不是直接拼接到训练 JSONL。
 
-### 步骤 3：场景与状态配对
+###步骤 3：场景与状态配对
 
 将表达骨架与本项目场景因子配对。配对器必须：
 
@@ -142,7 +142,7 @@ source_id + source_record_id + conversation_id + parent_id
 - 区分“询问政策”和“明确要求创建申请”
 - 区分“应追问”“应调用工具”“应停止调用”
 
-### 步骤 4：生成可执行 oracle
+###步骤 4：生成可执行 oracle
 
 每条 case 由模拟器从初态实际执行，并记录：
 
@@ -178,7 +178,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 若多条轨迹业务等价，应写入多条 `acceptable_tool_sequences` 或由状态目标判定，不误伤合理策略。
 
-### 步骤 5：自然语言实现
+###步骤 5：自然语言实现
 
 - 优先保留公开 test 池的自然表达节奏和多轮结构
 - 替换所有订单、商品和平台标识
@@ -186,7 +186,7 @@ source_id + source_record_id + conversation_id + parent_id
 - 不让场景标签、正确工具名或终态泄漏到用户文本
 - 同一 oracle 可以生成少量表达变体，但所有变体继承同一 parent/group，不跨集合
 
-### 步骤 6：自动门禁
+###步骤 6：自动门禁
 
 每条正式 case 必须：
 
@@ -199,7 +199,7 @@ source_id + source_record_id + conversation_id + parent_id
 - 没有近重复测试案例
 - 三个工具、追问和无工具场景均达到最低覆盖
 
-### 步骤 7：人工复核
+###步骤 7：人工复核
 
 从正式测试集中分层抽取 100～200 条，两名审核者独立检查：
 
@@ -213,7 +213,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 报告一致性、分歧类型和仲裁结果。严重 oracle 错误必须为零后才能冻结。
 
-## 6. 防止训练污染
+##6. 防止训练污染
 
 以下内容不得进入训练 prompt、数据生成提示或训练数据：
 
@@ -226,7 +226,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 正式 test 目录应只在评测阶段挂载；对外报告只保存逐样本 ID、指标和经过脱敏的案例摘录。
 
-## 7. 指标与分层报告
+##7. 指标与分层报告
 
 至少报告：
 
@@ -244,7 +244,7 @@ source_id + source_record_id + conversation_id + parent_id
 
 指标分别按 IID、Compositional、Challenge、场景、工具、难度和来源统计。主指标给出 bootstrap 95% 置信区间，模型间使用配对比较。
 
-## 8. 版本与产物
+##8. 版本与产物
 
 每次冻结生成：
 
@@ -262,7 +262,7 @@ Git 只提交生成器、schema、配置和不含真实数据的报告；原始�
 
 `manifest.json` 至少记录：构建代码 commit、配置版本、来源哈希、case 数、子集/场景/工具分布、自动审计结果、人工审核结果和所有产物 SHA-256。
 
-## 9. 冻结门槛
+##9. 冻结门槛
 
 正式 rollout test 只有同时满足以下条件才可用于 7B 主结果：
 

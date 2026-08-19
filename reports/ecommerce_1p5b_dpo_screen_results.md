@@ -1,12 +1,10 @@
 # 1.5B DPO 后审计筛选与失败闭环
-
-> 日期：2026-08-09
 >
 > 代码提交：训练 `a225cadd3455a1e72402e684f71eb36c8d05ff85`；失败分析 `bb64859`；checkpoint 评测 `e879b8f`
 >
 > 状态：v1.3.2 DPO 未通过 1.5B 方向门禁，不进入 beta 矩阵或 7B
 
-## 1. 受控设置
+##1. 受控设置
 
 - Initial：Qwen2.5-1.5B-Instruct；SFT parent：`sft-r4-all-full-seed42-v1`。
 - 三组均从同一个 r4 SFT adapter 初始化，reference 为其冻结副本；首步前 policy/reference log-prob 最大绝对差均为 0.0。
@@ -17,7 +15,7 @@
 - 业务评测固定使用 200 条 screen，IID / Compositional / Challenge = 100 / 50 / 50；贪心解码，最多 6 个工具轮次。
 - 所有差值在相同 case 上进行 10,000 次 paired bootstrap，seed 20260809。
 
-## 2. 训练指标不能代表业务效果
+##2. 训练指标不能代表业务效果
 
 | DPO 组成 | train runtime | train loss | eval loss | eval preference accuracy | eval reward margin | 峰值显存 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -27,7 +25,7 @@
 
 三组验证 preference accuracy 均达到 1.0，但 rollout 全部退化。该指标只证明模型区分了当前构造的 chosen/rejected，不能证明它学到了正确业务策略。
 
-## 3. 固定 200 条 screen 结果
+##3. 固定 200 条 screen 结果
 
 | 模型 | task success（95% CI） | 相对 SFT 配对差值（95% CI） | 工具选择 | 参数正确 | 事实忠实 | 禁止工具不触发 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -39,9 +37,9 @@
 
 三组相对 SFT 的置信区间均完全低于 0。多粒度 full 增加数据和训练步数后没有改善，反而出现 37 条 parse/missing-final failure。
 
-## 4. “出了什么问题 → 为什么 → 试了什么 → 解没解决”
+##4. “出了什么问题 → 为什么 → 试了什么 → 解没解决”
 
-### 4.1 SFT 成功能力被 DPO 破坏
+###4.1 SFT 成功能力被 DPO 破坏
 
 | 组成 | SFT 成功→DPO 失败 | SFT 失败→DPO 成功 | 净变化 | 工具序列发生变化 |
 |---|---:|---:|---:|---:|
@@ -51,7 +49,7 @@
 
 多粒度 full 的 72 条回退中，33 条来自 create；回退后的轨迹有 35 条不调用工具、37 条只调用 `query_order_status`。matched 的 62 条回退中同样有 33 条 create，37 条无工具、25 条只查订单。这是明确的动作抑制和多步流程坍缩，不是措辞变化。
 
-### 4.2 是否只是训练过久
+###4.2 是否只是训练过久
 
 复用三个现有 `checkpoint-50`，不重新训练，在相同 200 条 screen 上评测：
 
@@ -63,7 +61,7 @@
 
 早停没有消除回退，两个多粒度 checkpoint 在前 50 steps 就已经失去全部 create 成功案例。因此“仅仅 epoch 太多”未被证据支持。
 
-### 4.3 当前根因判断
+###4.3 当前根因判断
 
 已确认：
 
@@ -79,7 +77,7 @@
 - 合成 rejected 与真实 SFT rollout 的边界错误分布不一致，preference accuracy 很快饱和；
 - response 层更新通过共享 LoRA 参数影响了更早的工具决策。
 
-## 5. 决策与下一版数据门禁
+##5. 决策与下一版数据门禁
 
 本轮停止 beta 0.05/0.3 矩阵，不把失败的数据方向放大到 7B，也不打开 600 development gate 或 formal test v2。
 
@@ -93,7 +91,7 @@ v1.4 优先建设较小但更难的行为保持型偏好集：
 6. 先构造 500～1,000 对高质量 v1.4，在 10/25/50 steps 保存 checkpoint；先用开发 screen 的小分层子集判断方向，只有候选不回退才跑完整 200 条；
 7. 只有相对 SFT 的 task success 配对区间不再显著为负，且 create、事实忠实、禁止调用没有关键退化，才进一步比较 beta 或扩大数据量。
 
-## 6. 远端证据
+##6. 远端证据
 
 - 统一比较：`experiments/local/1p5b/dpo_postaudit_screen_comparison_v2.json`
 - 失败迁移：`experiments/local/1p5b/dpo_postaudit_failure_analysis_v2.json`
@@ -103,7 +101,7 @@ v1.4 优先建设较小但更难的行为保持型偏好集：
 
 这些产物位于 AutoDL 数据盘并被 Git 忽略；Git 跟踪训练/评测/失败分析脚本和本报告。
 
-## 7. v1.4 候选池审计（2026-08-10）
+##7. v1.4 候选池审计
 
 新增冻结 SFT 难度打分后，4,436 条训练候选仅有 310 条 `mean_logp_margin <= 0`，占 6.99%，
 且全部集中于 `must_stop`。`must_continue`、`wrong_action`、`parameter`、`response` 四桶的
@@ -114,7 +112,7 @@ v1.4 优先建设较小但更难的行为保持型偏好集：
 只会补入更多已被 SFT 轻易区分的合成负例。本轮停止 800 对训练，下一版改用训练来源上的冻结 SFT
 真实 rollout 失败挖掘 hard negative；只有五个行为桶均具备足够边界错误，才恢复 1.5B 方向实验。
 
-## 8. 真实 rollout 挖掘闭环（2026-08-10）
+##8. 真实 rollout 挖掘闭环
 
 冻结 SFT r4 在 CSDS/DCH-2 train-only 的 2,000 条 mining 场景上得到 48.75% task success，
 并从 1,025 个失败中提取 1,024 个首分歧 pair。逐对重新打分后，train 中 66.02% 的 pair
@@ -125,7 +123,7 @@ v1.4 优先建设较小但更难的行为保持型偏好集：
 1.5B 方向集改为 continue/stop 各 36%、parameter 4%、response 24%，共 720/80 对，
 在 10/25/45 step checkpoint 上检查是否保住 create、事实忠实和多步工具链。
 
-## 9. v1.4 方向门结果与 checkpoint 选择（2026-08-10）
+##9. v1.4 方向门结果与 checkpoint 选择
 
 使用修复否定句事实识别后的 evaluator v2，对相同 200 条 screen 重新评测并进行
 10,000 次配对 bootstrap（seed `20260809`）：

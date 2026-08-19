@@ -1,5 +1,4 @@
 {
-  "captured_at_utc": "2026-08-10T04:36:41.408447+00:00",
   "command": "bash scripts/ecommerce/run_7b_seed_replication_eval.sh",
   "config": {
     "data": {

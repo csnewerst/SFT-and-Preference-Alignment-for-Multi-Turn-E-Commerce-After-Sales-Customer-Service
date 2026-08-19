@@ -1,6 +1,6 @@
 # DPO v1.4 质量优先数据规范
 
-## 结论
+##结论
 
 正式 DPO 不再以 5,000～10,000 对为硬目标。结合 v1.3.2 在 1.5B 上的显著回退，v1.4 采用：
 
@@ -9,7 +9,7 @@
 - 可接受总量：2,000～3,500 对；
 - 不允许用随机、模板化或 preference accuracy 已饱和的容易 pair 补足数量。
 
-## 行为分桶
+##行为分桶
 
 | 分桶 | 比例 | 目的 |
 |---|---:|---|
@@ -21,7 +21,7 @@
 
 `must_continue` 与 `must_stop` 分开配额，不能再用全局 Action/Final 50:50 代替条件分布。
 
-## 难度筛选
+##难度筛选
 
 冻结入选 SFT adapter，对每对 completion 计算长度归一化 log-prob：
 
@@ -33,7 +33,7 @@ mean_logp_margin = chosen_mean_logp - rejected_mean_logp
 
 每个父样本在一个 split 最多保留 2 对，防止单条公开对话扩展出的多个工具位置支配训练分布。
 
-## 实验门禁
+##实验门禁
 
 1. 先在 800 对方向集上运行 10/25/50 steps checkpoint。
 2. 优先用较小分层开发集排除明显回退，只让存活 checkpoint 跑完整 200 screen。
@@ -41,7 +41,7 @@ mean_logp_margin = chosen_mean_logp - rejected_mean_logp
 4. create、事实忠实、禁止工具和 premature-stop 任一关键回退都阻止扩量。
 5. 只有方向通过后才构建约 2,500 对正式训练候选；formal test v2 仍只在 7B 配置冻结后打开。
 
-## 2026-08-10 冻结 SFT 难度审计结论
+## 冻结 SFT 难度审计结论
 
 对 v1.3.2 的 4,436 train / 564 validation 候选逐对计算冻结 SFT r4 的长度归一化
 `chosen - rejected` log-prob margin。审计发现：
@@ -64,7 +64,7 @@ mean_logp_margin = chosen_mean_logp - rejected_mean_logp
 `must_continue / must_stop / wrong_action / parameter / response` 偏好对。screen 一轮 720 train 对应约 45 个有效步，
 checkpoint 改为 10 / 25 / 45。
 
-## 2026-08-10 真实 rollout hard-negative 结果
+## 真实 rollout hard-negative 结果
 
 从 CSDS、DCH-2 的 train split 表达骨架构造 2,000 条独立 mining 场景，冻结 1.5B SFT r4
 以 greedy、最多 6 步执行真实工具环境：

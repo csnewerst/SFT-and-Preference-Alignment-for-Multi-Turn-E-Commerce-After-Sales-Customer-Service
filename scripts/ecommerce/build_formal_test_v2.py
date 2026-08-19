@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping
 
@@ -66,7 +65,7 @@ def build_formal_test(
         "schema_version": "2.0",
         "dataset_id": "ecommerce-formal-test-v2",
         "status": "formal_frozen_test_unopened",
-        "sealed_at_utc": datetime.now(timezone.utc).isoformat(),
+        "sealed": True,
         "case_count": len(cases),
         "evidence_split": "test",
         "evidence_offset": evidence_offset,

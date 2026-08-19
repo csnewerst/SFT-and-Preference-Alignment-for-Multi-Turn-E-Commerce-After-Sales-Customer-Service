@@ -48,8 +48,8 @@ def validate(
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != "2.0" or manifest.get("status") != "formal_frozen_test_unopened":
         raise ValueError("formal test manifest must be schema 2.0 with status formal_frozen_test_unopened")
-    if not manifest.get("sealed_at_utc"):
-        raise ValueError("formal test manifest must record sealed_at_utc")
+    if manifest.get("sealed") is not True:
+        raise ValueError("formal test manifest must record sealed=true")
 
     artifacts = {name: candidate_dir / f"{name}.jsonl" for name in ARTIFACTS}
     cases = load_jsonl(artifacts["cases"])

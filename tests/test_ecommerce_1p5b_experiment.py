@@ -818,7 +818,7 @@ def _write_formal_candidate(path, cases):
             {
                 "schema_version": "2.0",
                 "status": "formal_frozen_test_unopened",
-                "sealed_at_utc": "2026-08-09T00:00:00Z",
+                "sealed": True,
                 "artifacts": artifacts,
             }
         ),
